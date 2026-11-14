@@ -139,10 +139,13 @@ print(unusual_records, width = Inf)
 print(table(main_data$year, main_data$mode))
 
 # Save datasets
-write_csv(main_data, "analysis_data_final.csv")
-write_csv(sensitivity_data, "analysis_data_with_unusual.csv")
-write_csv(sample_counts, "sample_selection_counts.csv")
-write_csv(unusual_records, "unusual_records.csv")
+write_csv(main_data, "project datasets/analysis_data_final.csv")
+write_csv(
+  sensitivity_data,
+  "project datasets/analysis_data_with_unusual.csv"
+)
+write_csv(sample_counts, "project datasets/sample_selection_counts.csv")
+write_csv(unusual_records, "project datasets/unusual_records.csv")
 
 # 6. Sensitivity check: compare estimates with and without the two flagged polls.
 # Keep the other sample rules and model formula the same in both analyses.
@@ -171,7 +174,7 @@ comparison <- tibble(
 print(summary(model_main))
 print(summary(model_with_unusual))
 print(comparison)
-write_csv(comparison, "sensitivity_comparison.csv")
+write_csv(comparison, "project datasets/sensitivity_comparison.csv")
 
 # Polls may not be independent when they share a state or pollster. This may
 # affect standard errors and p-values; discuss this limitation in the report.
