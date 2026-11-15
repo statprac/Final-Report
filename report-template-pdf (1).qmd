@@ -1,8 +1,10 @@
 ---
 title: "A clear, specific title stating what you investigated"
 author:
-  - "Student One (a1111111)"
-  - "Student Two (a2222222)"
+  - "Caitlin Knowles (a1111111)"
+  - "Isobel Cusack (a1971531)"
+  - "Linh Chi Nguyen (a2222222)"
+  - "Manjun Xu (a2222222)"
 date: today
 abstract: |
   Executive summary. 4–6 sentences, written for a non-specialist. State the
@@ -47,12 +49,11 @@ n_obs   <- nrow(data)
 
 # Introduction {#sec-intro}
 
-<!-- See rubric: Introduction - state and motivate the research question. -->
+Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is. While polling is an insightful tool, it does not always accurately reflect the final results of elections. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
 
-State the research question clearly and motivate why it matters, ideally with
-reference to existing literature [@wickham2023]. For example: *we ask whether a
-vehicle's weight is associated with its fuel economy, and how strong that
-association is after accounting for engine power.*
+This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. 
+This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
+
 
 # Method {#sec-method}
 
