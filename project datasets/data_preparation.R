@@ -148,8 +148,6 @@ write_csv(sample_counts, "project datasets/sample_selection_counts.csv")
 write_csv(unusual_records, "project datasets/unusual_records.csv")
 
 # 6. Sensitivity check: compare estimates with and without the two flagged polls.
-# Keep the other sample rules and model formula the same in both analyses.
-# final model once it is agreed; use the same formula for both datasets.
 model_formula <- sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode)
 model_main <- lm(model_formula, data = main_data)
 model_with_unusual <- lm(model_formula, data = sensitivity_data)
