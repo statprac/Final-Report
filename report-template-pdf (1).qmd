@@ -26,20 +26,25 @@ editor: source
     wrap: 72
 ---
 
-**Code and data:** all analysis for this report is reproducible from the repository at <https://github.com/USER/REPO>. <!-- See rubric: Code repository -->
+**Code and data:** all analysis for this report is reproducible from the repository at <https://github.com/statprac/Final-Report.git> <!-- See rubric: Code repository -->
 
 ```{r}
 #| label: setup
 library(tidyverse)
+install.packages("modelsummary")
 library(modelsummary)
 library(knitr)
 
 # --- Replace this block with loading YOUR data ---------------
 
-data <- mtcars
 
-# Example analysis: does a car's weight predict its fuel economy?
-model <- lm(mpg ~ wt + hp, data = data)
+polls <- read_csv(
+  "project datasets/clean/state_polls_combined_clean.csv",
+  show_col_types = FALSE)
+
+elections <- read_csv(
+  "project datasets/raw/1976-2024-president.csv",
+  show_col_types = FALSE)
 
 # Pull values out so they can be reported inline (never hard-type a number)
 r2      <- summary(model)$r.squared
@@ -157,6 +162,13 @@ The analysis performed identifies associations between predictors and response v
 # References {.unnumbered}
 
 ::: {#refs}
+Bon, J.J., Ballard, T. and Baffour, B. (2018). Polling bias and undecided voter allocations: US presidential elections, 2004–2016. *Journal of the Royal Statistical Society Series A: Statistics in Society*, 182(2), pp.467–493. doi:10.1111/rssa.12414.
+
+HuffPost Pollster. (2017). *US Public Opinion Polls Aggregation Dataset* \[Data file and codebook\]. Retrieved from <https://projects.huffingtonpost.com> (Originally accessed via HuffPost Pollster API, archived 2017). Licensed under CC BY-NC-SA 3.0.
+
+MIT Election Data and Science Lab. 2017. “U.S. President 1976–2024.” Harvard Dataverse. [**https://doi.org/10.7910/DVN/42MVDXLinks to an external site.**](https://doi.org/10.7910/DVN/42MVDX). Data retrieved: 27th July 2026.
+
+rOpenGov Project. (2020). *pollstR: R Client for the HuffPost Pollster API* (Version 2.0.0) \[Computer software\]. GitHub. Archived under GPL-2.0.
 :::
 
 ```{=latex}
@@ -382,26 +394,115 @@ write_csv(comparison, "project datasets/sensitivity_comparison.csv")
 
 ```
 
-## Model
-
-@tbl-model-detail reports the full fitted model with 95% confidence intervals.
+## Models
 
 ```{r}
-#| label: tbl-model-detail
-#| tbl-cap: "Full regression results, with 95% confidence intervals."
-#| echo: true
-# Fit the model and report it as a formatted table (not raw console output)
-model <- lm(mpg ~ wt + hp, data = mtcars)
+# Read the main analysis dataset
+analysis <- read_csv("project datasets/analysis_data_final.csv")
 
-modelsummary(
-  list("Fuel economy (mpg)" = model),
-  statistic = "conf.int",                       # 95% CIs beneath each estimate
-  coef_map  = c("wt" = "Weight (1000 lbs)",
-                "hp" = "Horsepower",
-                "(Intercept)" = "Intercept"),
-  gof_map   = c("nobs", "r.squared", "adj.r.squared")
+# Check the data
+glimpse(analysis)
+summary(analysis)
+
+# Set reference groups: 2012 and Live Phone
+analysis <- analysis |>
+  mutate(
+    year = factor(year, levels = c(2012, 2016)),
+    mode = factor(
+      mode,
+      levels = c("Live Phone", "Internet", "IVR/Online")
+    )
+  )
+
+table(analysis$year, analysis$mode)
+
+# Model 1: additive model
+model_add <- lm(
+  absolute_error ~ Undecided + days_to_election + mode + year,
+  data = analysis
+)
+
+# Model 2: associations can differ by year
+model_interaction <- lm(
+  absolute_error ~ year * (Undecided + days_to_election + mode),
+  data = analysis
 )
 ```
+
+## Model comparison
+
+```{r}
+# See the estimated coefficients
+
+summary(model_add)
+summary(model_interaction)
+
+# Compare the two nested models
+anova(model_add, model_interaction)
+
+# Check diagnostic plots for the interaction model
+par(mfrow = c(2, 2))
+plot(model_interaction)
+par(mfrow = c(1, 1))
+
+# Try a model with a transformed response
+model_log <- lm(
+  log1p(absolute_error) ~
+    year * (Undecided + days_to_election + mode),
+  data = analysis
+)
+
+par(mfrow = c(2, 2))
+plot(model_log)
+par(mfrow = c(1, 1))
+
+summary(model_log)
+
+# Check the largest Cook's distances
+head(sort(cooks.distance(model_log), decreasing = TRUE), 10)
+```
+
+```{r}
+
+# Inspect the three largest Cook's distances for the log model
+analysis[c(96, 219, 299),
+         c("state", "year", "pollster", "mode", "absolute_error")]
+
+model_log_additive <- lm(
+  log1p(absolute_error) ~ Undecided + days_to_election + mode + year,
+  data = analysis
+)
+
+anova(model_log_additive, model_log)
+
+# Fit the same model using a square-root transformation (Final model)
+model_sqrt <- lm(
+  sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode),
+  data = analysis
+)
+
+# Check diagnostics
+par(mfrow = c(2, 2))
+plot(model_sqrt)
+par(mfrow = c(1, 1))
+
+summary(model_sqrt)
+
+head(sort(cooks.distance(model_sqrt), decreasing = TRUE), 5)
+
+# Inspect the five largest Cook's distances for the square-root model
+analysis[c(96, 7, 299, 219, 237),
+         c("state", "year", "pollster", "mode", "absolute_error")]
+
+model_sqrt_additive <- lm(
+  sqrt(absolute_error) ~ Undecided + days_to_election + mode + year,
+  data = analysis
+)
+
+anova(model_sqrt_additive, model_sqrt)
+```
+
+@tbl-model-detail reports the full fitted model with 95% confidence intervals.
 
 ## Assumption checks {#sec-app-checks}
 
