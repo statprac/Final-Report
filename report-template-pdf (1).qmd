@@ -22,11 +22,11 @@ execute:
   warning: false
   message: false
 editor: source
+  markdown: 
+    wrap: 72
 ---
 
-
-**Code and data:** all analysis for this report is reproducible from the
-repository at <https://github.com/USER/REPO>.  <!-- See rubric: Code repository -->
+**Code and data:** all analysis for this report is reproducible from the repository at <https://github.com/USER/REPO>. <!-- See rubric: Code repository -->
 
 ```{r}
 #| label: setup
@@ -51,20 +51,15 @@ n_obs   <- nrow(data)
 
 Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is. While polling is an insightful tool, it does not always accurately reflect the final results of elections. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
 
-This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. 
-This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
-
+This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
 
 # Method {#sec-method}
 
-<!-- See rubric: Method - describe the data and the statistical methods. -->
-
 ## Data
 
-Describe the data accurately: its source, the unit of observation, the variables
-used, and any cleaning or exclusions. The example uses the built-in `mtcars`
-data [@rcore], covering `r n_obs` vehicles. Summarise the key variables as in
-@tbl-descriptives.
+This study used three datasets: state-level presidential polling data from the 2012 and 2016 U.S. elections, obtained through the HuffPost Pollster/rOpenGov collection, and presidential election results from the MIT Election Data and Science Lab (MEDSL). The polling datasets contained 1,135 records from 2012 and 1,303 from 2016, including polling dates, states, survey modes, candidate support percentages, undecided voter share and sample sizes. Each polling record was treated as one observation. 
+
+The election results were restricted to 2012 and 2016 and used to calculate actual state-level Democratic–Republican vote margins.
 
 ```{r}
 #| label: tbl-descriptives
@@ -81,22 +76,47 @@ data |>
   kable(digits = 2, col.names = c("Variable", "Mean", "SD"))
 ```
 
+## Data Preparation and Sample Selection
+
+The 2012 and 2016 polling datasets were combined after standardising state names, election years and polling dates to ensure consistency. Official election results were then matched to the polling data by state and year. Before calculating actual election margins, votes received by the same major-party candidate under different party labels were combined to avoid underestimating their total support. 
+
+The analysis was restricted to polls ending within 90 days before Election Day. This period was selected to focus on polls conducted closer to the election, when voter preferences are more relevant to the final outcome. However, this restriction excludes earlier polls and limits the conclusions to the selected pre-election period. Records with invalid sample sizes, unavailable polling errors or missing undecided voter shares were excluded, leaving 1,561 complete observations. Missing undecided values were not replaced with zero because missing information does not necessarily indicate that no respondents were undecided. 
+
+The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing more meaningful comparisons of their relationships with polling error. Other modes were excluded from the primary analysis due to limited or uneven coverage across years. Consequently, the findings cannot be generalised to all survey modes. 
+
+Finally, two polls for which the sum of reported response percentages exceeded 102% were excluded from the main analysis, leaving 1,219 polls. As these totals do not necessarily indicate errors, both polls were included in a sensitivity analysis to assess whether their exclusion affected the results.
+
+## Variable Construction
+
+Polling accuracy was measured using the absolute difference between the reported Democratic–Republican polling margin and the actual election margin. 
+
+The polling margin was calculated as: 
+
+Poll Margin = Democratic % - Republican %
+
+The actual election margin was calculated as: 
+
+Actual Margin = ((Dvotes-Rvotes) / Total Votes) x 100
+
+Votes received by the same candidate under different party labels were combined before calculating the actual margin.
+
+Absolute polling error was then defined as: 
+
+Absolute Error = Poll Margin - Actual Margin
+
+Lower absolute error indicates greater polling accuracy. All margins and errors were expressed in percentage points. 
+
+The main explanatory variables were reported undecided voter share and survey mode. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations. Undecided voter share was measured in percentage points, and survey mode and year were treated as categorical variables.
+
 ## Statistical methods
 
-Describe and justify the statistical methods in the context of the question
-here, a multiple linear regression of fuel economy on weight and power. State
-the model and the assumptions you will check (linearity, constant variance,
-normal residuals); the checks themselves go in @sec-appendix.
+Describe and justify the statistical methods in the context of the question here, a multiple linear regression of fuel economy on weight and power. State the model and the assumptions you will check (linearity, constant variance, normal residuals); the checks themselves go in @sec-appendix.
 
 # Results {#sec-results}
 
 <!-- See rubric: Results - describe analysis w.r.t. the question; visualise; check assumptions. -->
 
-@fig-relationship shows the relationship between weight and fuel economy, with a
-fitted regression line. The estimated model is reported in @tbl-model: each
-additional 1000 lbs is associated with a change of `r round(wt_beta, 1)` mpg,
-and the model explains `r round(100 * r2, 1)`% of the variation in fuel economy.
-Model assumptions are checked in @sec-appendix.
+@fig-relationship shows the relationship between weight and fuel economy, with a fitted regression line. The estimated model is reported in @tbl-model: each additional 1000 lbs is associated with a change of `r round(wt_beta, 1)` mpg, and the model explains `r round(100 * r2, 1)`% of the variation in fuel economy. Model assumptions are checked in @sec-appendix.
 
 ```{r}
 #| label: fig-relationship
@@ -128,10 +148,9 @@ modelsummary(
 
 <!-- See rubric: Discussion - connect to the question and context; examine limitations. -->
 
-Interpret the result in relation to the research question and the wider context,
-then examine the limitations honestly. Keep claims within what the data support:
-these are observational 1974 model-year cars (`r n_obs` of them), so the
-association is not causal and may not generalise to modern vehicles.
+Interpret the result in relation to the research question and the wider context, then examine the limitations honestly. Keep claims within what the data support: these are observational 1974 model-year cars (`r n_obs` of them), so the association is not causal and may not generalise to modern vehicles.
+
+## Limitations
 
 # References {.unnumbered}
 
@@ -146,12 +165,222 @@ association is not causal and may not generalise to modern vehicles.
 
 <!-- See rubric: Statistical appendix - fully reproducible, annotated analysis. -->
 
-This appendix documents the analysis so the results above are fully reproducible.
-The annotated code reproduces the model and its assumption checks; the complete
-project (data, scripts, and commit history) is in the repository linked at the
-top.
+This appendix documents the analysis so the results above are fully reproducible. The annotated code reproduces the model and its assumption checks; the complete project (data, scripts, and commit history) is in the repository linked at the top.
 
-## Model {#sec-app-model}
+## Statistical methods
+
+```{r}
+library(tidyverse)
+
+# 1. Read the combined cleaned polling data and election results.
+
+polls <- read_csv(
+  "project datasets/clean/state_polls_combined_clean.csv",
+  show_col_types = FALSE
+)
+
+elections <- read_csv(
+  "project datasets/raw/1976-2024-president.csv",
+  show_col_types = FALSE
+)
+
+# Check that each state-poll has a unique identifier.
+sum(is.na(polls$poll_key)) # Count missing poll keys
+
+sum(duplicated(polls$poll_key)) # Count duplicate poll keys
+
+# 2. Count each major candidate's votes across all party label.
+
+# This includes votes reported on extra ballot lines, especially in New York.
+elections <- elections |>
+  filter(year %in% c(2012, 2016)) |>
+  mutate(
+    state = str_replace_all(str_to_lower(state), " ", "-"),
+    state = if_else(state == "district-of-columbia", "washington-dc", state),
+    candidate_group = case_when(
+      year == 2012 & candidate == "OBAMA, BARACK H." ~ "Democrat",
+      year == 2012 & candidate == "ROMNEY, MITT" ~ "Republican",
+      year == 2016 & candidate == "CLINTON, HILLARY" ~ "Democrat",
+      year == 2016 & candidate == "TRUMP, DONALD J." ~ "Republican",
+      TRUE ~ NA_character_
+    )
+  )
+
+# Check Democrat and Republican records with no candidate name
+unknown_candidate <- elections |>
+  filter(
+    is.na(candidate),
+    party_simplified %in% c("DEMOCRAT", "REPUBLICAN")
+  ) |>
+  select(year, state, party_simplified, candidatevotes)
+
+print(unknown_candidate)
+
+# Each state-year should have one total-votes value.
+vote_totals <- elections |>
+  group_by(year, state) |>
+  summarise(total_votes = first(totalvotes),
+            number_of_totals = n_distinct(totalvotes), .groups = "drop")
+
+# Count state-year records with different total-vote values
+print(sum(vote_totals$number_of_totals != 1))
+
+# Count state-year records with missing total votes
+print(sum(is.na(vote_totals$total_votes)))
+
+# Count state-year records with zero or negative total votes
+print(sum(vote_totals$total_votes <= 0, na.rm = TRUE))
+
+candidate_votes <- elections |>
+  filter(!is.na(candidate_group)) |>
+  group_by(year, state, candidate_group) |>
+  summarise(votes = sum(candidatevotes), .groups = "drop") |>
+  pivot_wider(names_from = candidate_group, values_from = votes)
+
+actual_results <- candidate_votes |>
+  left_join(vote_totals, by = c("year", "state")) |>
+  mutate(actual_margin = 100 * (Democrat - Republican) / total_votes) |>
+  select(year, state, actual_margin)
+
+# Count duplicate state-year election results
+print(sum(duplicated(actual_results[c("year", "state")])))
+
+# Count missing actual margins
+print(sum(is.na(actual_results$actual_margin)))
+
+# 3. Join each poll to its state-year election result.
+polls <- polls |>
+  left_join(actual_results, by = c("year", "state")) |>
+  mutate(
+    poll_margin = case_when(
+      year == 2012 ~ Obama - Romney,
+      year == 2016 ~ Clinton - Trump
+    ),
+    absolute_error = abs(poll_margin - actual_margin)
+  )
+
+# Count polls without a matching election result
+print(sum(is.na(polls$actual_margin)))
+
+# 4. Flag polls whose reported response percentages add to more than 102%.
+# Missing categories are ignored when adding reported values.
+# A high total may reflect rounding or reporting differences, so we do not indicate that it is an error.
+polls <- polls |>
+  mutate(
+    reported_total = case_when(
+      year == 2012 ~ rowSums(across(c(Obama, Romney, Undecided, Other)), na.rm = TRUE),
+      year == 2016 ~ rowSums(across(c(Clinton, Trump, Undecided, Other, Johnson, McMullin)), na.rm = TRUE)
+    ),
+    unusual_total = reported_total > 102
+  )
+
+# 5. Select polls from the final 90 days.
+# Exclude polls with missing or non-positive sample size.
+# After data exploration, we agree to include 3 modes: Live Phone, Internet and IVR/Online polls into the model.
+# Furthermore, we exclude the two flagged polls from the main sample
+# and include them in a sensitivity check.
+
+sample_90 <- polls |> filter(between(days_to_election, 0, 90))
+
+valid <- sample_90 |>
+  filter(!is.na(absolute_error), !is.na(sample_size), sample_size > 0)
+
+# Polls that do not report undecided share are excluded; this may affect results.
+complete <- valid |> filter(!is.na(Undecided))
+
+selected <- complete |>
+  filter(mode %in% c("Live Phone", "Internet", "IVR/Online")) |>
+  mutate(
+    year = factor(year, levels = c(2012, 2016)),
+    mode = factor(mode, levels = c("Live Phone", "Internet", "IVR/Online"))
+  )
+
+main_data <- selected |> filter(!unusual_total)
+
+sensitivity_data <- selected
+
+unusual_records <- selected |>
+  filter(unusual_total) |>
+  select(poll_key, year, state, pollster, mode,
+         Obama, Romney, Clinton, Trump, Undecided, Johnson, McMullin, Other,
+         reported_total)
+
+sample_counts <- tibble(
+  stage = c("Cleaned polls", "Within 90 days", "Valid error and sample size",
+            "Undecided reported", "Three modes", "Main sample"),
+  remaining = c(nrow(polls), nrow(sample_90), nrow(valid), nrow(complete),
+                nrow(selected), nrow(main_data))
+) |>
+  mutate(excluded_at_step = lag(remaining) - remaining)
+
+print(sample_counts)
+
+print(unusual_records, width = Inf)
+
+print(table(main_datayear,maindatamode))
+
+# Save datasets
+write_csv(main_data, "project datasets/analysis_data_final.csv")
+
+write_csv(
+  sensitivity_data,
+  "project datasets/analysis_data_with_unusual.csv"
+)
+
+write_csv(sample_counts, "project datasets/sample_selection_counts.csv")
+
+write_csv(unusual_records, "project datasets/unusual_records.csv")
+
+
+```
+
+## Sensitivity Check for Unusual Records {#sec-app-model}
+
+```{r}
+# Sensitivity check: compare estimates with and without the two flagged polls.
+# Keep the other sample rules and model formula the same in both analyses.
+# final model once it is agreed; use the same formula for both datasets.
+
+model_formula <- absolute_error ~ year * (Undecided + days_to_election + mode)
+
+model_main <- lm(model_formula, data = main_data)
+
+model_with_unusual <- lm(model_formula, data = sensitivity_data)
+
+# Check whether the two models have the same coefficient names
+print(identical(
+  names(coef(model_main)),
+  names(coef(model_with_unusual))
+))
+
+# Count coefficients that could not be estimated
+print(sum(is.na(coef(model_main))))
+
+print(sum(is.na(coef(model_with_unusual))))
+
+comparison <- tibble(
+  term = names(coef(model_main)),
+  main_estimate = unname(coef(model_main)),
+  with_unusual_estimate = unname(coef(model_with_unusual))
+) |>
+  mutate(estimate_change = with_unusual_estimate - main_estimate)
+
+print(summary(model_main))
+
+print(summary(model_with_unusual))
+
+print(comparison)
+
+write_csv(comparison, "project datasets/sensitivity_comparison.csv")
+
+# Polls may not be independent when they share a state or pollster. This may
+# affect standard errors and p-values; discuss this limitation in the report.
+# These observational results describe the selected polls and two elections;
+# they do not establish causation or necessarily apply to future elections.
+
+```
+
+## Model
 
 @tbl-model-detail reports the full fitted model with 95% confidence intervals.
 
@@ -174,8 +403,7 @@ modelsummary(
 
 ## Assumption checks {#sec-app-checks}
 
-@fig-diagnostics shows the residual diagnostics used to check the linear-model
-assumptions of constant variance and approximately normal residuals.
+@fig-diagnostics shows the residual diagnostics used to check the linear-model assumptions of constant variance and approximately normal residuals.
 
 ```{r}
 #| label: fig-diagnostics
@@ -190,9 +418,7 @@ plot(model, which = 2)   # normal Q-Q: normality of residuals
 
 ## Computational environment {#sec-app-env}
 
-The complete software environment is captured in `renv.lock` in the repository,
-so the analysis can be restored exactly with `renv::restore()`. The core package
-versions are listed in @tbl-environment.
+The complete software environment is captured in `renv.lock` in the repository, so the analysis can be restored exactly with `renv::restore()`. The core package versions are listed in @tbl-environment.
 
 ```{r}
 #| label: tbl-environment
@@ -206,5 +432,3 @@ tibble::tibble(
 ) |>
   kable()
 ```
-
-
