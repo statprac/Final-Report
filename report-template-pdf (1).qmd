@@ -152,6 +152,8 @@ Interpret the result in relation to the research question and the wider context,
 
 ## Limitations
 
+The analysis performed identifies associations between predictors and response variables; this does not mean there is necessarily a causal relationship in the data. Other factors may also impact polling error. Polls with missing undecided voter shares were excluded, which may cause selection bias if such polls differ systematically from those that were included in the final dataset. In this investigation, only three survey modes were included; therefore, the associations found cannot be generalised to other survey modes. Polls from the same state and polling organisation could be related, which can affect the reliability of standard errors and confidence intervals, as the observations may not be independent. Finally, only two election periods were covered in this analysis, meaning that the findings may not be applicable to all elections, particularly historical elections that would not have used the same polling methods. It was also chosen to only analyse polls within a 90-day period of the election; it should be considered that associations may differ for polls outside of this period. The linear models created for this investigation are not highly accurate; other modelling methods could perform better. However, the focus of this investigation is linear modelling.
+
 # References {.unnumbered}
 
 ::: {#refs}
