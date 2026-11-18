@@ -4,7 +4,7 @@ author:
   - "Caitlin Knowles (a1111111)"
   - "Isobel Cusack (a1971531)"
   - "Linh Chi Nguyen (a2222222)"
-  - "Manjun Xu (a2222222)"
+  - "Manjun Xu (a1981762)"
 date: today
 abstract: |
   Executive summary. 4–6 sentences, written for a non-specialist. State the
