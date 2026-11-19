@@ -54,7 +54,7 @@ n_obs   <- nrow(data)
 
 # Introduction {#sec-intro}
 
-Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is. While polling is an insightful tool, it does not always accurately reflect the final results of elections. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
+Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections (Traugott, 2005). Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting (Soumbatiants et al., 2006). Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is (Soumbatiants et al., 2006). While polling is an insightful tool, it does not always accurately reflect the final results of elections (Traugott, 2005). This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
 
 This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
 
@@ -168,7 +168,11 @@ HuffPost Pollster. (2017). *US Public Opinion Polls Aggregation Dataset* \[Data 
 
 MIT Election Data and Science Lab. 2017. “U.S. President 1976–2024.” Harvard Dataverse. [**https://doi.org/10.7910/DVN/42MVDXLinks to an external site.**](https://doi.org/10.7910/DVN/42MVDX). Data retrieved: 27th July 2026.
 
-rOpenGov Project. (2020). *pollstR: R Client for the HuffPost Pollster API* (Version 2.0.0) \[Computer software\]. GitHub. Archived under GPL-2.0.
+rOpenGov Project. (2020). *pollstR: R Client for the HuffPost Pollster API* (Version 2.0.0) \[Computer software\]. GitHub. Archived under GPfi061
+
+Soumbatiants, S., Chappell, H. W., & Johnson, E. (2006). Using state polls to forecast U.S. Presidential election outcomes. *Public Choice*, *127*(1–2), 207–223. https://doi.org/10.1007/s11127-006-1259-3
+
+‌Traugott, M. W. (2005). The Accuracy of the National Preelection Polls in the 2004 Presidential Election. *Public Opinion Quarterly*, *69*(5), 642–654. https://doi.org/10.1093/poq/nfi061
 :::
 
 ```{=latex}
@@ -300,6 +304,7 @@ valid <- sample_90 |>
   filter(!is.na(absolute_error), !is.na(sample_size), sample_size > 0)
 
 # Polls that do not report undecided share are excluded; this may affect results.
+
 complete <- valid |> filter(!is.na(Undecided))
 
 selected <- complete |>
@@ -331,7 +336,7 @@ print(sample_counts)
 
 print(unusual_records, width = Inf)
 
-print(table(main_datayear,maindatamode))
+print(table(main_data$year, main_data$mode))
 
 # Save datasets
 write_csv(main_data, "project datasets/analysis_data_final.csv")
