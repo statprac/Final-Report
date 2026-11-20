@@ -16,4 +16,14 @@ This project uses 3 main datasets:
 
 ### Repository Structure
 
-- 
+- project datasets/: Stores raw data and cleaned data (cleaned in EDA report) along with analysis datasets created in this investigation.
+- report-references.bib: Contains the bibliography of references used in the report.
+- Final_Report: Quarto document used to write and produce the completed report.
+- README.md: An overview of the project repository along with instructions for reproducing the analysis done in the report.
+
+### Authors
+
+- Caitlin Knowles
+- Isobel Cusack
+- Linh Chi Nguyen
+- Manjun Xu
