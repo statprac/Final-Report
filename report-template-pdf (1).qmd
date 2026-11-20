@@ -6,37 +6,44 @@ author:
   - "Linh Chi Nguyen (a2222222)"
   - "Manjun Xu (a1981762)"
 date: today
+
 abstract: |
   Executive summary. 4–6 sentences, written for a non-specialist. State the
   research question, the data, the method, and the key finding, translating any
   statistics into plain language. Write this last, once the report is complete.
+
 format:
   pdf:
     toc: true
     number-sections: true
     documentclass: scrartcl
     fig-pos: "H"
+
 bibliography: report-references.bib
+
 execute:
-  echo: false      # keep code out of the body; it is shown in the appendix
+  echo: false
   warning: false
   message: false
+
 editor: source
-  markdown: 
-    wrap: 72
+
+markdown:
+  wrap: 72
 ---
 
 **Code and data:** all analysis for this report is reproducible from the repository at <https://github.com/statprac/Final-Report.git> <!-- See rubric: Code repository -->
 
 ```{r}
 #| label: setup
+
+# Loading packages
+
 library(tidyverse)
-install.packages("modelsummary")
 library(modelsummary)
 library(knitr)
 
-# --- Replace this block with loading YOUR data ---------------
-
+# Loading data
 
 polls <- read_csv(
   "project datasets/clean/state_polls_combined_clean.csv",
@@ -47,6 +54,7 @@ elections <- read_csv(
   show_col_types = FALSE)
 
 # Pull values out so they can be reported inline (never hard-type a number)
+
 r2      <- summary(model)$r.squared
 wt_beta <- coef(model)[["wt"]]
 n_obs   <- nrow(data)
@@ -162,17 +170,9 @@ The analysis performed identifies associations between predictors and response v
 # References {.unnumbered}
 
 ::: {#refs}
-Bon, J.J., Ballard, T. and Baffour, B. (2018). Polling bias and undecided voter allocations: US presidential elections, 2004–2016. *Journal of the Royal Statistical Society Series A: Statistics in Society*, 182(2), pp.467–493. doi:10.1111/rssa.12414.
-
-HuffPost Pollster. (2017). *US Public Opinion Polls Aggregation Dataset* \[Data file and codebook\]. Retrieved from <https://projects.huffingtonpost.com> (Originally accessed via HuffPost Pollster API, archived 2017). Licensed under CC BY-NC-SA 3.0.
-
-MIT Election Data and Science Lab. 2017. “U.S. President 1976–2024.” Harvard Dataverse. [**https://doi.org/10.7910/DVN/42MVDXLinks to an external site.**](https://doi.org/10.7910/DVN/42MVDX). Data retrieved: 27th July 2026.
-
-rOpenGov Project. (2020). *pollstR: R Client for the HuffPost Pollster API* (Version 2.0.0) \[Computer software\]. GitHub. Archived under GPfi061
-
-Soumbatiants, S., Chappell, H. W., & Johnson, E. (2006). Using state polls to forecast U.S. Presidential election outcomes. *Public Choice*, *127*(1–2), 207–223. https://doi.org/10.1007/s11127-006-1259-3
-
-‌Traugott, M. W. (2005). The Accuracy of the National Preelection Polls in the 2004 Presidential Election. *Public Opinion Quarterly*, *69*(5), 642–654. https://doi.org/10.1093/poq/nfi061
+```         
+report-references.bib
+```
 :::
 
 ```{=latex}
