@@ -3,7 +3,7 @@ title: "A clear, specific title stating what you investigated"
 author:
   - "Caitlin Knowles (a1111111)"
   - "Isobel Cusack (a1971531)"
-  - "Linh Chi Nguyen (a2222222)"
+  - "Linh Chi Nguyen (a1954861)"
   - "Manjun Xu (a1981762)"
 date: today
 
@@ -74,56 +74,89 @@ This study used three datasets: state-level presidential polling data from the 2
 
 The election results were restricted to 2012 and 2016 and used to calculate actual state-level Democratic–Republican vote margins.
 
+The variables used in the final analysis are summarised in
+@tbl-descriptives.
+
 ```{r}
 #| label: tbl-descriptives
-#| tbl-cap: "Summary of the variables used in the analysis."
-data |>
-  summarise(
-    across(c(mpg, wt, hp),
-           list(mean = mean, sd = sd),
-           .names = "{.col}_{.fn}")
+#| tbl-cap: "Summary of numerical variables in the final analysis sample."
+
+library(tidyverse)
+library(knitr)
+
+analysis_data <- read_csv(
+  "project datasets/analysis_data_final.csv",
+  show_col_types = FALSE
+)
+
+analysis_data |>
+  select(absolute_error, Undecided, days_to_election) |>
+  pivot_longer(
+    everything(),
+    names_to = "Variable",
+    values_to = "Value"
   ) |>
-  pivot_longer(everything(),
-               names_to = c("Variable", ".value"),
-               names_sep = "_") |>
+  group_by(Variable) |>
+  summarise(
+    Mean = mean(Value, na.rm = TRUE),
+    SD = sd(Value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
   kable(digits = 2, col.names = c("Variable", "Mean", "SD"))
 ```
 
 ## Data Preparation and Sample Selection
 
-The 2012 and 2016 polling datasets were combined after standardising state names, election years and polling dates to ensure consistency. Official election results were then matched to the polling data by state and year. Before calculating actual election margins, votes received by the same major-party candidate under different party labels were combined to avoid underestimating their total support. 
+The 2012 and 2016 polling datasets were combined after standardising state names, election years and polling dates to ensure consistency. The initial data cleaning was described in our EDA report. Official election results were then matched to the polling data by state and year. Before calculating actual election margins, votes received by the same major-party candidate under different party labels were combined to avoid underestimating their total support.
 
-The analysis was restricted to polls ending within 90 days before Election Day. This period was selected to focus on polls conducted closer to the election, when voter preferences are more relevant to the final outcome. However, this restriction excludes earlier polls and limits the conclusions to the selected pre-election period. Records with invalid sample sizes, unavailable polling errors or missing undecided voter shares were excluded, leaving 1,561 complete observations. Missing undecided values were not replaced with zero because missing information does not necessarily indicate that no respondents were undecided. 
+The analysis was restricted to polls ending within 90 days before Election Day. This period was selected to focus on polls conducted closer to the election. However, this restriction excludes earlier polls and limits the conclusions to the selected pre-election period. Records with missing or non-positive sample sizes, unavailable polling errors or missing undecided voter shares were excluded, leaving 1,561 observations at this stage. Missing undecided values were not replaced with zero because missing information does not necessarily indicate that no respondents were undecided.
 
-The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing more meaningful comparisons of their relationships with polling error. Other modes were excluded from the primary analysis due to limited or uneven coverage across years. Consequently, the findings cannot be generalised to all survey modes. 
+The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing comparisons of their relationships with polling error. Other modes were excluded because they had limited representation or were not available consistently across both years. Consequently, the findings cannot be generalised to all survey modes.
 
 Finally, two polls for which the sum of reported response percentages exceeded 102% were excluded from the main analysis, leaving 1,219 polls. As these totals do not necessarily indicate errors, both polls were included in a sensitivity analysis to assess whether their exclusion affected the results.
 
-## Variable Construction
+### Variable construction
 
-Polling accuracy was measured using the absolute difference between the reported Democratic–Republican polling margin and the actual election margin. 
+Polling accuracy was measured using the absolute difference between the reported Democratic–Republican polling margin and the actual election margin.
 
-The polling margin was calculated as: 
+The polling margin was calculated as:
 
-Poll Margin = Democratic % - Republican %
+$$
+\text{Poll margin}
+= \text{Democratic poll percentage} - \text{Republican poll percentage}
+$$
 
-The actual election margin was calculated as: 
+The actual election margin was calculated as:
 
-Actual Margin = ((Dvotes-Rvotes) / Total Votes) x 100
+$$
+\text{Actual margin}
+= \frac{\text{Democratic votes} - \text{Republican votes}}
+       {\text{Total votes}}
+  \times 100
+$$
 
-Votes received by the same candidate under different party labels were combined before calculating the actual margin.
+Votes received by the same candidate under different party labels were combined before calculating the actual margin. Absolute polling error was then defined as:
 
-Absolute polling error was then defined as: 
+$$
+\text{Absolute error}
+= \left| \text{Poll margin} - \text{Actual margin} \right|
+$$
 
-Absolute Error = Poll Margin - Actual Margin
+A lower absolute error indicates greater polling accuracy. All margins and errors were expressed in percentage points.
 
-Lower absolute error indicates greater polling accuracy. All margins and errors were expressed in percentage points. 
-
-The main explanatory variables were reported undecided voter share and survey mode. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations. Undecided voter share was measured in percentage points, and survey mode and year were treated as categorical variables.
+The main explanatory variables were reported undecided voter share and survey mode. Undecided voter share was measured as a percentage. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations. Survey mode and election year were treated as categorical variables.
 
 ## Statistical methods
 
-Describe and justify the statistical methods in the context of the question here, a multiple linear regression of fuel economy on weight and power. State the model and the assumptions you will check (linearity, constant variance, normal residuals); the checks themselves go in @sec-appendix.
+We used multiple linear regression to examine how polling error was associated with survey mode and the reported percentage of undecided voters, while accounting for the number of days before the election. We also examined whether these associations differed between the 2012 and 2016 elections.
+
+The response variable was the square root of absolute polling error. This transformation was chosen after comparing diagnostic plots for models using the original error, $\log(1 + \text{absolute error})$, and the square root of the error. The explanatory variables were election year, survey mode, undecided voter percentage and days before the election. Election year and survey mode were treated as categorical variables, with 2012 and Live Phone as the reference groups.
+
+We fitted an additive model and an interaction model using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. We compared the two nested models using an F-test. The final model was selected by considering the research question, model comparison and diagnostic plots.
+
+Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. The diagnostic plots and supporting code are provided in the Statistical Appendix.
+
+We also conducted a sensitivity analysis by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
 
 # Results {#sec-results}
 
