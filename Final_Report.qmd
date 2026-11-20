@@ -8,9 +8,7 @@ author:
 date: today
 
 abstract: |
-  Executive summary. 4–6 sentences, written for a non-specialist. State the
-  research question, the data, the method, and the key finding, translating any
-  statistics into plain language. Write this last, once the report is complete.
+  This report investigates the association between survey mode and undecided voter in 2012 and 2016 US state level election polls with consideration to the number of days unill the election. Using polling data from HuffPost Pollster/rOpenGov and official electoral results from MIT Election Data and Science Lab, the analysis evaluates 1219 polls from a 90 period prior to the elections. The absolute polling error was calculated by taking the Democrat-Republican polling margin and comparing it to the actual margin from the election results. Multiple linear regression models were created to find any associations between polling error, polling method and undecided voter share and any differences over the two election periods. The results indicated that there were small associations between the predictors and response, but no singular predictor was statistically significant. In all, it was found that there is no significant evidece undecided voter share and polling method alone are associated with differences in polling accuracy suggesting that other factors may influence polling error.
 
 format:
   pdf:
