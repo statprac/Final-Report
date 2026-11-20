@@ -74,8 +74,7 @@ This study used three datasets: state-level presidential polling data from the 2
 
 The election results were restricted to 2012 and 2016 and used to calculate actual state-level Democratic–Republican vote margins.
 
-The variables used in the final analysis are summarised in
-@tbl-descriptives.
+The variables used in the final analysis are summarised in @tbl-descriptives.
 
 ```{r}
 #| label: tbl-descriptives
@@ -148,15 +147,15 @@ The main explanatory variables were reported undecided voter share and survey mo
 
 ## Statistical methods
 
-We used multiple linear regression to examine how polling error was associated with survey mode and the reported percentage of undecided voters, while accounting for the number of days before the election. We also examined whether these associations differed between the 2012 and 2016 elections.
+In this report multiple linear regression was used to examine how polling error was associated with survey mode and the reported percentage of undecided voters, while accounting for the number of days before the election. It was also examined whether these associations differed between the 2012 and 2016 elections.
 
 The response variable was the square root of absolute polling error. This transformation was chosen after comparing diagnostic plots for models using the original error, $\log(1 + \text{absolute error})$, and the square root of the error. The explanatory variables were election year, survey mode, undecided voter percentage and days before the election. Election year and survey mode were treated as categorical variables, with 2012 and Live Phone as the reference groups.
 
-We fitted an additive model and an interaction model using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. We compared the two nested models using an F-test. The final model was selected by considering the research question, model comparison and diagnostic plots.
+An additive model and an interaction model were fitted using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. The two nested models were compared using an F-test. The final model was selected by considering the research question, model comparison and diagnostic plots.
 
 Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. The diagnostic plots and supporting code are provided in the Statistical Appendix.
 
-We also conducted a sensitivity analysis by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
+A sensitivity analysis was conducted by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
 
 # Results {#sec-results}
 
