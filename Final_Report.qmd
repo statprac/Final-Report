@@ -153,14 +153,14 @@ Using linear regression the effect of year, number of undecided voters, number o
 
 sqrt(absolute_error)=1.571+0.529×1\[year=2016\]+0.0273×\[Undecided\]+0.001×\[days_to_election\]-0.198×1\[mode=Internet\]-0.216×1\[mode=IVR/Online\]-0.0233×1\[year=2016\]×\[Undecided\]+0.001×1\[year=2016\]×\[days_to_election\]+0.376×1\[year=2016\]×1\[mode=Internet\]+0.0753×1\[year=2016\]×1\[mode=IVR/Online\]
 
-
 ```{r}
 #| label: conf-interval
 #| fig-cap: "Confidence intervals of model coefficients."
 #confidence intervals for model coefficients 
 confint(model_sqrt, level = 0.95)
 ```
-Unlitmately it can be seen that each variable has only a small effect on the total outcome. No variable makes a significant change to the result on its own. 
+
+Unlitmately it can be seen that each variable has only a small effect on the total outcome. No variable makes a significant change to the result on its own.
 
 ##checking assumptions
 
@@ -197,19 +197,24 @@ head(sort(cooks.distance(model_sqrt), decreasing = TRUE), 5)
 analysis[c(96, 7, 299, 219, 237),
          c("state", "year", "pollster", "mode", "absolute_error")]
 ```
-All five largest cook's distance values are below the threshold value of 0.5, indicating that their removal would have minimal effect on the fit of the model, so they remain in the data set. All observations are from 2012 but variety of states, pollsters, and polling modes. 
+
+All five largest cook's distance values are below the threshold value of 0.5, indicating that their removal would have minimal effect on the fit of the model, so they remain in the data set. All observations are from 2012 but variety of states, pollsters, and polling modes.
 
 ```{r}
 #| label: sensitivity-comparison
 #| tbl-cap: "Comparison of models with and without sensitivity check."
 view(sensitivity_comparison) 
 ```
-Minimal differences observed between the coefficients of the models based on either data set. 
-# Discussion {#sec-discussion}
 
-<!-- See rubric: Discussion - connect to the question and context; examine limitations. -->
+Minimal differences observed between the coefficients of the models based on either data set. \# Discussion {#sec-discussion}
 
-Interpret the result in relation to the research question and the wider context, then examine the limitations honestly. Keep claims within what the data support: these are observational 1974 model-year cars (`r n_obs` of them), so the association is not causal and may not generalise to modern vehicles.
+# Discussion
+
+This investigation aimed to find whether polling error had any association with undecided voter share or polling method in the 2012 and/or 2016 US presidential elections, while also taking into account the days until the election. The overall conlcusion was that neither of these polling factors held a strong association with absolute polling error in the chosen fitted model. As indicated by the results, none of the predictors used appeared to have a statistically significant impact on polling error. This would suggest that neither undecided voter share nor polling method alone can explain differences in polling accuracy using the observation selected for this analysis.
+
+In the model for the 2012 polls, the association between polling error and undecided voters was slightly positive however, in 2016, the interaction coefficient shows that the positive relationship is smaller. This indicates that there may be a difference in the association between undecided voters and polling error over different election periods. Nonetheless, the coefficients were still small, and the results did not find statistically significant evidence that the difference between years is meaningful. Hence, undecided voter share alone cannot be treated as a reliable predictor in this analysis.
+
+Survey mode also differed slightly in its association with polling error between electoral periods. In 2012, IVR/Online and Internet polls had negative coefficients in relation to Live Phone polls. Yet in 2016, the interaction terms indicate that there was a change in the differences. The estimated Internet association with Live Phone changed to being positive, whereas the relationship between IVR/Online and Live Phone remained negative, indicating variance in the accuracy of polling methods between elections. However, it cannot be concluded that there is a statistically significant difference as the coefficients are measured on the sqaure root scale. Therefore, it cannot be determined for certain wherther there is a polling method that consistantly produced more accurate results.
 
 ## Limitations
 
