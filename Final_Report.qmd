@@ -214,22 +214,25 @@ report-references.bib
 
 # Statistical appendix {#sec-appendix}
 
-<!-- See rubric: Statistical appendix - fully reproducible, annotated analysis. -->
+This appendix documents the data preparation, model comparison, diagnostics and sensitivity analysis. The analysis uses the cleaned polling data from the EDA and the election results in the project repository.
 
-This appendix documents the analysis so the results above are fully reproducible. The annotated code reproduces the model and its assumption checks; the complete project (data, scripts, and commit history) is in the repository linked at the top.
+## Data preparation and sample selection {#sec-app-data}
 
-## Statistical methods
+The following code constructs the poll and election margins, identifies unusual reported totals and applies the sample selection rules. Missing response categories are ignored when calculating the reported total. The two unusual polls are excluded from `main_data` and retained in `sensitivity_data`.
 
 ```{r}
+#| label: app-data-preparation
+#| echo: true
+#| results: hide
+# Data preparation and sensitivity check
+
 library(tidyverse)
 
 # 1. Read the combined cleaned polling data and election results.
-
 polls <- read_csv(
   "project datasets/clean/state_polls_combined_clean.csv",
   show_col_types = FALSE
 )
-
 elections <- read_csv(
   "project datasets/raw/1976-2024-president.csv",
   show_col_types = FALSE
@@ -240,8 +243,7 @@ sum(is.na(polls$poll_key)) # Count missing poll keys
 
 sum(duplicated(polls$poll_key)) # Count duplicate poll keys
 
-# 2. Count each major candidate's votes across all party label.
-
+# 2. Count each major candidate's votes across all party labels.
 # This includes votes reported on extra ballot lines, especially in New York.
 elections <- elections |>
   filter(year %in% c(2012, 2016)) |>
@@ -309,7 +311,6 @@ polls <- polls |>
     ),
     absolute_error = abs(poll_margin - actual_margin)
   )
-
 # Count polls without a matching election result
 print(sum(is.na(polls$actual_margin)))
 
@@ -327,19 +328,15 @@ polls <- polls |>
 
 # 5. Select polls from the final 90 days.
 # Exclude polls with missing or non-positive sample size.
-# After data exploration, we agree to include 3 modes: Live Phone, Internet and IVR/Online polls into the model.
+# After data exploration, we agree to include 3 modes: Live Phone, Internet and IVR/Online polls into the model. 
 # Furthermore, we exclude the two flagged polls from the main sample
 # and include them in a sensitivity check.
 
 sample_90 <- polls |> filter(between(days_to_election, 0, 90))
-
 valid <- sample_90 |>
   filter(!is.na(absolute_error), !is.na(sample_size), sample_size > 0)
-
 # Polls that do not report undecided share are excluded; this may affect results.
-
 complete <- valid |> filter(!is.na(Undecided))
-
 selected <- complete |>
   filter(mode %in% c("Live Phone", "Internet", "IVR/Online")) |>
   mutate(
@@ -348,9 +345,7 @@ selected <- complete |>
   )
 
 main_data <- selected |> filter(!unusual_total)
-
 sensitivity_data <- selected
-
 unusual_records <- selected |>
   filter(unusual_total) |>
   select(poll_key, year, state, pollster, mode,
@@ -366,210 +361,100 @@ sample_counts <- tibble(
   mutate(excluded_at_step = lag(remaining) - remaining)
 
 print(sample_counts)
-
 print(unusual_records, width = Inf)
-
 print(table(main_data$year, main_data$mode))
-
-# Save datasets
-write_csv(main_data, "project datasets/analysis_data_final.csv")
-
-write_csv(
-  sensitivity_data,
-  "project datasets/analysis_data_with_unusual.csv"
-)
-
-write_csv(sample_counts, "project datasets/sample_selection_counts.csv")
-
-write_csv(unusual_records, "project datasets/unusual_records.csv")
-
-
-```
-
-## Sensitivity Check for Unusual Records {#sec-app-model}
-
-```{r}
-# Sensitivity check: compare estimates with and without the two flagged polls.
-# Keep the other sample rules and model formula the same in both analyses.
-# final model once it is agreed; use the same formula for both datasets.
-
-model_formula <- absolute_error ~ year * (Undecided + days_to_election + mode)
-
-model_main <- lm(model_formula, data = main_data)
-
-model_with_unusual <- lm(model_formula, data = sensitivity_data)
-
-# Check whether the two models have the same coefficient names
-print(identical(
-  names(coef(model_main)),
-  names(coef(model_with_unusual))
-))
-
-# Count coefficients that could not be estimated
-print(sum(is.na(coef(model_main))))
-
-print(sum(is.na(coef(model_with_unusual))))
-
-comparison <- tibble(
-  term = names(coef(model_main)),
-  main_estimate = unname(coef(model_main)),
-  with_unusual_estimate = unname(coef(model_with_unusual))
-) |>
-  mutate(estimate_change = with_unusual_estimate - main_estimate)
-
-print(summary(model_main))
-
-print(summary(model_with_unusual))
-
-print(comparison)
-
-write_csv(comparison, "project datasets/sensitivity_comparison.csv")
-
-# Polls may not be independent when they share a state or pollster. This may
-# affect standard errors and p-values; discuss this limitation in the report.
-# These observational results describe the selected polls and two elections;
-# they do not establish causation or necessarily apply to future elections.
-
-```
-
-## Models
-
-```{r}
-# Read the main analysis dataset
-analysis <- read_csv("project datasets/analysis_data_final.csv")
-
-# Check the data
-glimpse(analysis)
-summary(analysis)
-
-# Set reference groups: 2012 and Live Phone
-analysis <- analysis |>
-  mutate(
-    year = factor(year, levels = c(2012, 2016)),
-    mode = factor(
-      mode,
-      levels = c("Live Phone", "Internet", "IVR/Online")
-    )
-  )
-
-table(analysis$year, analysis$mode)
-
-# Model 1: additive model
-model_add <- lm(
-  absolute_error ~ Undecided + days_to_election + mode + year,
-  data = analysis
-)
-
-# Model 2: associations can differ by year
-model_interaction <- lm(
-  absolute_error ~ year * (Undecided + days_to_election + mode),
-  data = analysis
-)
-```
-
-## Model comparison
-
-```{r}
-# See the estimated coefficients
-
-summary(model_add)
-summary(model_interaction)
-
-# Compare the two nested models
-anova(model_add, model_interaction)
-
-# Check diagnostic plots for the interaction model
-par(mfrow = c(2, 2))
-plot(model_interaction)
-par(mfrow = c(1, 1))
-
-# Try a model with a transformed response
-model_log <- lm(
-  log1p(absolute_error) ~
-    year * (Undecided + days_to_election + mode),
-  data = analysis
-)
-
-par(mfrow = c(2, 2))
-plot(model_log)
-par(mfrow = c(1, 1))
-
-summary(model_log)
-
-# Check the largest Cook's distances
-head(sort(cooks.distance(model_log), decreasing = TRUE), 10)
 ```
 
 ```{r}
+#| label: tbl-sample-selection
+#| tbl-cap: "Polls remaining after each selection step. The main analysis included 1,219 polls."
+#| echo: true
+knitr::kable(sample_counts)
+```
 
-# Inspect the three largest Cook's distances for the log model
-analysis[c(96, 219, 299),
-         c("state", "year", "pollster", "mode", "absolute_error")]
+## Model comparison and final model {#sec-app-model}
 
-model_log_additive <- lm(
-  log1p(absolute_error) ~ Undecided + days_to_election + mode + year,
-  data = analysis
-)
+The additive and interaction models were fitted on the square-root scale. Their comparison tests the year interactions as a group. Reference groups are 2012 and Live Phone.
 
-anova(model_log_additive, model_log)
-
-# Fit the same model using a square-root transformation (Final model)
-model_sqrt <- lm(
-  sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode),
-  data = analysis
-)
-
-# Check diagnostics
-par(mfrow = c(2, 2))
-plot(model_sqrt)
-par(mfrow = c(1, 1))
-
-summary(model_sqrt)
-
-head(sort(cooks.distance(model_sqrt), decreasing = TRUE), 5)
-
-# Inspect the five largest Cook's distances for the square-root model
-analysis[c(96, 7, 299, 219, 237),
-         c("state", "year", "pollster", "mode", "absolute_error")]
-
+```{r}
+#| label: app-fit-models
+#| echo: true
+# Fit the additive and interaction models to the same sample
 model_sqrt_additive <- lm(
   sqrt(absolute_error) ~ Undecided + days_to_election + mode + year,
-  data = analysis
+  data = main_data
 )
-
-anova(model_sqrt_additive, model_sqrt)
+model_sqrt <- lm(
+  sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode),
+  data = main_data
+)
 ```
 
-@tbl-model-detail reports the full fitted model with 95% confidence intervals.
+```{r}
+#| label: tbl-app-model-comparison
+#| tbl-cap: "Comparison of additive and interaction models on the square-root scale. The F-test compares the year interactions as a group."
+#| echo: true
+knitr::kable(anova(model_sqrt_additive, model_sqrt), digits = 3)
+```
 
-## Assumption checks {#sec-app-checks}
+```{r}
+#| label: tbl-model-detail
+#| tbl-cap: "Final model coefficients and 95% confidence intervals on the square-root scale. The reference groups are 2012 and Live Phone."
+#| echo: true
+model_results <- cbind(Estimate = coef(model_sqrt), confint(model_sqrt))
+knitr::kable(model_results, digits = 3)
+```
 
-@fig-diagnostics shows the residual diagnostics used to check the linear-model assumptions of constant variance and approximately normal residuals.
+## Diagnostic checks {#sec-app-checks}
+
+The following plots examine residual patterns, normality, residual spread and influential observations.
 
 ```{r}
 #| label: fig-diagnostics
-#| echo: true
-#| fig-cap: "Residual diagnostics: residuals vs fitted values (left) and a normal Q-Q plot (right)."
+#| fig-cap: "Diagnostic plots for the final square-root model. The Q-Q plot departs from the line at the tails, and the Scale-Location plot suggests a slight increase in residual spread."
 #| fig-width: 7
-#| fig-height: 3.2
-par(mfrow = c(1, 2))
-plot(model, which = 1)   # residuals vs fitted: linearity and equal variance
-plot(model, which = 2)   # normal Q-Q: normality of residuals
+#| fig-height: 7
+#| echo: true
+par(mfrow = c(2, 2))
+plot(model_sqrt)
+par(mfrow = c(1, 1))
 ```
-
-## Computational environment {#sec-app-env}
-
-The complete software environment is captured in `renv.lock` in the repository, so the analysis can be restored exactly with `renv::restore()`. The core package versions are listed in @tbl-environment.
 
 ```{r}
-#| label: tbl-environment
-#| tbl-cap: "Core software versions used to produce this report."
+#| label: tbl-app-cooks
+#| tbl-cap: "Five polls with the largest Cook's distances in the final model. The largest Cook's distance was approximately 0.014."
 #| echo: true
-pkgs <- c("tidyverse", "modelsummary", "gt")
-tibble::tibble(
-  Software = c("R", pkgs),
-  Version  = c(paste(R.version$major, R.version$minor, sep = "."),
-               vapply(pkgs, \(p) as.character(packageVersion(p)), character(1)))
-) |>
-  kable()
+# Inspect the polls with the largest Cook's distances
+cook_values <- cooks.distance(model_sqrt)
+top_polls <- head(order(cook_values, decreasing = TRUE), 5)
+main_data |>
+  slice(top_polls) |>
+  select(poll_key, year, state, pollster, mode, absolute_error) |>
+  mutate(Cooks_distance = cook_values[top_polls]) |>
+  knitr::kable(digits = 3)
 ```
+
+## Sensitivity analysis {#sec-app-sensitivity}
+
+The same final model was refitted after adding the two unusual polls. Estimates are compared on the square-root scale.
+
+```{r}
+#| label: tbl-app-sensitivity
+#| tbl-cap: "Sensitivity analysis on the square-root scale. Change is the estimate including the two unusual polls minus the main-sample estimate."
+#| echo: true
+model_with_unusual <- lm(
+  sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode),
+  data = sensitivity_data
+)
+
+# Compare matching coefficient estimates
+sensitivity_comparison <- tibble(
+  Term = names(coef(model_sqrt)),
+  Main_sample = unname(coef(model_sqrt)),
+  With_unusual = unname(coef(model_with_unusual))
+) |>
+  mutate(Change = With_unusual - Main_sample)
+knitr::kable(sensitivity_comparison, digits = 3)
+```
+
+The ordinary confidence intervals and F-test assume independent observations. Polls from the same state or pollster may be related, so these results should be interpreted with caution.

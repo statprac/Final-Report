@@ -141,3 +141,11 @@ ggplot(plot_data, aes(x = mode, y = fit, colour = year, group = year)) +
     caption = "Bars show 95% confidence intervals."
   ) +
   theme_minimal()
+
+# Save the plot
+ggsave(
+  "survey_mode_predictions.png",
+  width = 8,
+  height = 5,
+  dpi = 300
+)
