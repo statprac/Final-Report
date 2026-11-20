@@ -37,32 +37,20 @@ markdown:
 ```{r}
 #| label: setup
 
-# Loading packages
-
 library(tidyverse)
 library(modelsummary)
 library(knitr)
 
-# Loading data
-
-polls <- read_csv(
-  "project datasets/clean/state_polls_combined_clean.csv",
-  show_col_types = FALSE)
-
-elections <- read_csv(
-  "project datasets/raw/1976-2024-president.csv",
-  show_col_types = FALSE)
-
-# Pull values out so they can be reported inline (never hard-type a number)
-
-r2      <- summary(model)$r.squared
-wt_beta <- coef(model)[["wt"]]
-n_obs   <- nrow(data)
+# Load the final analysis dataset
+analysis <- read_csv(
+  "project datasets/analysis_data_final.csv",
+  show_col_types = FALSE
+)
 ```
 
 # Introduction {#sec-intro}
 
-Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections \[traugott_2005\]. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting \[soumbataints_chappel_johnson_2006\]. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is \[soumbataints_chappel_johnson_2006\]. While polling is an insightful tool, it does not always accurately reflect the final results of elections \[traugott_2005\]. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling es
+Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections [@traugott_2005]. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting [@soumbatiants_chappell_johnson_2006]. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is [@soumbatiants_chappell_johnson_2006]. While polling is an insightful tool, it does not always accurately reflect the final results of elections [@traugott_2005]. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
 
 This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
 
@@ -113,7 +101,7 @@ The analysis was restricted to polls ending within 90 days before Election Day. 
 
 The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing comparisons of their relationships with polling error. Other modes were excluded because they had limited representation or were not available consistently across both years. Consequently, the findings cannot be generalised to all survey modes.
 
-Finally, two polls for which the sum of reported response percentages exceeded 102% were excluded from the main analysis, leaving 1,219 polls. As these totals do not necessarily indicate errors, both polls were included in a sensitivity analysis to assess whether their exclusion affected the results.
+Finally, two polls for which the sum of reported response percentages exceeded 102% were excluded from the main analysis, leaving 1,219 polls. The number of polls remaining after each selection step is shown in @tbl-sample-selection. As these totals do not necessarily indicate errors, both polls were included in a sensitivity analysis to assess whether their exclusion affected the results.
 
 ### Variable construction
 
@@ -152,11 +140,11 @@ We used multiple linear regression to examine how polling error was associated w
 
 The response variable was the square root of absolute polling error. This transformation was chosen after comparing diagnostic plots for models using the original error, $\log(1 + \text{absolute error})$, and the square root of the error. The explanatory variables were election year, survey mode, undecided voter percentage and days before the election. Election year and survey mode were treated as categorical variables, with 2012 and Live Phone as the reference groups.
 
-We fitted an additive model and an interaction model using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. We compared the two nested models using an F-test. The final model was selected by considering the research question, model comparison and diagnostic plots.
+We fitted an additive model and an interaction model using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. We compared the two nested models using an F-test. The model comparison is provided in @tbl-app-model-comparison. The final model was selected by considering the research question, model comparison and diagnostic plots.
 
-Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. The diagnostic plots and supporting code are provided in the Statistical Appendix.
+Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. The diagnostic plots for the final model are shown in @fig-diagnostics. Code for the models using the original, log-transformed and square-root responses is available in `model_analysis.R` in the project repository.
 
-We also conducted a sensitivity analysis by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
+We also conducted a sensitivity analysis by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. The coefficient comparison is provided in @tbl-app-sensitivity. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
 
 # Results {#sec-results}
 
