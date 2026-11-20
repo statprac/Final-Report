@@ -93,6 +93,51 @@ model_sqrt_additive <- lm(
   data = analysis
 )
 
+par(mfrow = c(2, 2))
+plot(model_sqrt_additive)
+par(mfrow = c(1, 1))
+
 anova(model_sqrt_additive, model_sqrt)
 
+#| echo: false
 
+library(tidyverse)
+
+# Predict the model outcome for each survey mode and year
+plot_data <- expand_grid(
+  year = levels(analysis$year),
+  mode = levels(analysis$mode),
+  Undecided = median(analysis$Undecided, na.rm = TRUE),
+  days_to_election = median(analysis$days_to_election, na.rm = TRUE)
+) |>
+  mutate(
+    year = factor(year, levels = levels(analysis$year)),
+    mode = factor(mode, levels = levels(analysis$mode))
+  )
+
+# Add predictions and 95% confidence intervals
+predictions <- predict(
+  model_sqrt,
+  newdata = plot_data,
+  interval = "confidence"
+)
+
+plot_data <- bind_cols(plot_data, as_tibble(predictions))
+
+# Plot the predictions
+
+ggplot(plot_data, aes(x = mode, y = fit, colour = year, group = year)) +
+  geom_point(size = 3)+
+  geom_errorbar(
+    aes(ymin = lwr, ymax = upr),
+    width = 0.12,
+  ) +
+  labs(
+    title = "Predicted polling error by survey mode and year",
+    subtitle = "Undecided voters: 5%; days to election: 26",
+    x = "Survey mode",
+    y = "Predicted square root of absolute polling error",
+    colour = "Election year",
+    caption = "Bars show 95% confidence intervals."
+  ) +
+  theme_minimal()
