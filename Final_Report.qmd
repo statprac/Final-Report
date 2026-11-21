@@ -158,6 +158,18 @@ A lower absolute error indicates greater polling accuracy. All margins and error
 
 The main explanatory variables were reported undecided voter share and survey mode. Undecided voter share was measured as a percentage. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations.
 
+The variables used in the analysis are described in @tbl-variables.
+
+| Variable | Description |
+|---|---|
+| Absolute polling error | Absolute difference between the Democratic–Republican polling margin and the actual election margin, in percentage points. |
+| Undecided voter share | Percentage of poll respondents reported as undecided. |
+| Survey mode | Method used to conduct the poll: Live Phone, Internet or IVR/Online. |
+| Days before Election Day | Number of days between the poll's end date and Election Day. |
+| Election year | Year of the election: 2012 or 2016. |
+
+: Variables used in the analysis and what they represent. {#tbl-variables}
+
 ## Statistical methods
 
 Multiple linear regression was used to examine associations with polling error and whether these differed by year.
