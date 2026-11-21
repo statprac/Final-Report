@@ -1,5 +1,5 @@
 ---
-title: "A clear, specific title stating what you investigated"
+title: "Survey Mode, Undecided Voters and Polling Error in the 2012 and 2016 U.S. Presidential Elections"
 author:
   - "Caitlin Knowles (a1993232)"
   - "Isobel Cusack (a1971531)"
@@ -8,13 +8,14 @@ author:
 date: today
 
 abstract: |
-  This report investigates the association between survey mode and undecided voter in 2012 and 2016 US state level election polls with consideration to the number of days unill the election. Using polling data from HuffPost Pollster/rOpenGov and official electoral results from MIT Election Data and Science Lab, the analysis evaluates 1219 polls from a 90 period prior to the elections. The absolute polling error was calculated by taking the Democrat-Republican polling margin and comparing it to the actual margin from the election results. Multiple linear regression models were created to find any associations between polling error, polling method and undecided voter share and any differences over the two election periods. The results indicated that there were small associations between the predictors and response, but no singular predictor was statistically significant. In all, it was found that there is no significant evidece undecided voter share and polling method alone are associated with differences in polling accuracy suggesting that other factors may influence polling error.
+ This report investigates how survey mode and reported undecided voter share were associated with polling error in the 2012 and 2016 U.S. presidential elections, while accounting for the number of days before Election Day. Using polling data from HuffPost Pollster/rOpenGov and official electoral results from the MIT Election Data and Science Lab, the analysis evaluates 1,219 polls ending within 90 days of the elections. Absolute polling error was calculated by comparing the Democratic–Republican polling margin with the actual election margin. Multiple linear regression models were fitted using the square root of absolute polling error to examine associations with polling method and undecided voter share, and whether these associations differed between the two election periods. The results suggested that the difference between Internet and Live Phone polls changed between the two elections, while there was not enough evidence that the association with undecided voter share differed by year. These findings should be interpreted with caution because polls from the same state or pollster may not be independent.
 
 format:
   pdf:
     toc: true
     number-sections: true
     documentclass: scrartcl
+    classoption: abstract=true
     fig-pos: "H"
 
 bibliography: report-references.bib
@@ -26,8 +27,6 @@ execute:
 
 editor: source
 
-markdown:
-  wrap: 72
 ---
 
 **Code and data:** all analysis for this report is reproducible from the repository at <https://github.com/statprac/Final-Report.git> <!-- See rubric: Code repository -->
@@ -67,13 +66,13 @@ model_sqrt <- lm(
 
 Pre-electoral polling plays an important role in understanding the public's political opinions and stances during election periods and can assist in predicting the outcomes of elections [@traugott_2005]. Polling on a state level is particularly insightful in the United States, as the results are determined by the Electoral College as opposed to national popular vote or preferential voting [@soumbatiants_chappell_johnson_2006]. Relative support for candidates on a state level can be estimated through polls, which can help assess how competitive each individual electoral contest is [@soumbatiants_chappell_johnson_2006]. While polling is an insightful tool, it does not always accurately reflect the final results of elections [@traugott_2005]. This is why it is important to understand what factors are associated with discrepancies between actual voting outcomes and polling estimates.
 
-This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The number of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, certain survey modes may collect more accurate polling data than others. Through examining these variables, it may become evident that certain poll types will predict outcomes that are close to actual election results. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
+This analysis focuses on two polling features that may be associated with polling error: the proportion of undecided voters and the survey mode used to obtain responses. Only polls within 90 days of the elections will be considered. The reported share of undecided voters may increase uncertainty as to which party/candidate is more likely to win prior to the election. Similarly, survey mode may be associated with differences in polling accuracy. Comparing 2012 and 2016 election polls and results allows the investigation of whether associations between polling error and polling characteristics are consistent across election periods. Previous research suggests that undecided voters are important when evaluating election polls. Bon and colleagues examined U.S. presidential elections from 2004 to 2016 and found that the allocation of undecided voters could contribute to polling bias, particularly in 2016 [@bon_ballard_baffour_2018]. This provides a reason to investigate whether reported undecided voter share is associated with polling error in our data. This analysis investigates how survey mode and reported undecided voter share are associated with state-level polling error, after accounting for time before Election Day, and whether these associations differ between the 2012 and 2016 elections.
 
 # Method {#sec-method}
 
 ## Data
 
-This study used three datasets: state-level presidential polling data from the 2012 and 2016 U.S. elections, obtained through the HuffPost Pollster/rOpenGov collection, and presidential election results from the MIT Election Data and Science Lab (MEDSL). The polling datasets contained 1,135 records from 2012 and 1,303 from 2016, including polling dates, states, survey modes, candidate support percentages, undecided voter share and sample sizes. Each polling record was treated as one observation. 
+This study used three datasets: state-level presidential polling data from the 2012 and 2016 U.S. elections, obtained through the HuffPost Pollster/rOpenGov collection [@arnold_leeper_linzer], and presidential election results from the MIT Election Data and Science Lab (MEDSL) [@mit_election_data_and_science_lab_2017]. The polling datasets contained 1,135 records from 2012 and 1,303 from 2016. Each polling record was treated as one observation.
 
 The election results were restricted to 2012 and 2016 and used to calculate actual state-level Democratic–Republican vote margins.
 
@@ -98,6 +97,12 @@ analysis_data |>
     names_to = "Variable",
     values_to = "Value"
   ) |>
+  mutate(
+    Variable = case_when(
+      Variable == "absolute_error" ~ "Absolute polling error (percentage points)",
+      Variable == "Undecided" ~ "Undecided voter share (%)",
+      Variable == "days_to_election" ~ "Days before Election Day")
+  ) |>
   group_by(Variable) |>
   summarise(
     Mean = mean(Value, na.rm = TRUE),
@@ -109,11 +114,16 @@ analysis_data |>
 
 ## Data Preparation and Sample Selection
 
-The 2012 and 2016 polling datasets were combined after standardising state names, election years and polling dates to ensure consistency. The initial data cleaning was described in our EDA report. Official election results were then matched to the polling data by state and year. Before calculating actual election margins, votes received by the same major-party candidate under different party labels were combined to avoid underestimating their total support.
+The initial cleaning of the polling data was completed for the
+[EDA report](https://github.com/statprac/EDA-report/blob/master/EDA-report.qmd).
+The corresponding [cleaning script](https://github.com/statprac/EDA-report/blob/master/clean-poll-data.R)
+is also available in the EDA repository.
 
-The analysis was restricted to polls ending within 90 days before Election Day. This period was selected to focus on polls conducted closer to the election. However, this restriction excludes earlier polls and limits the conclusions to the selected pre-election period. Records with missing or non-positive sample sizes, unavailable polling errors or missing undecided voter shares were excluded, leaving 1,561 observations at this stage. Missing undecided values were not replaced with zero because missing information does not necessarily indicate that no respondents were undecided.
+The 2012 and 2016 polling datasets were combined after standardising state names, election years and polling dates to ensure consistency. Official election results were then matched to the polling data by state and year. Before calculating actual election margins, votes received by the same major-party candidate under different party labels were combined to avoid underestimating their total support.
 
-The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing comparisons of their relationships with polling error. Other modes were excluded because they had limited representation or were not available consistently across both years. Consequently, the findings cannot be generalised to all survey modes.
+The analysis was restricted to polls ending between 90 days before Election Day and Election Day itself. This period was selected to focus on polls conducted closer to the election. Records with missing or non-positive sample sizes, unavailable polling errors or missing undecided voter shares were excluded, leaving 1,561 observations at this stage. Missing undecided values were not replaced with zero because missing information does not necessarily indicate that no respondents were undecided.
+
+The primary analysis focused on Live Phone, Internet and IVR/Online polls, reducing the sample to 1,221 observations. These three survey modes were selected because they were represented in both election years, allowing comparisons of their relationships with polling error. Other modes were excluded because they had limited representation or were not available consistently across both years.
 
 Finally, two polls for which the sum of reported response percentages exceeded 102% were excluded from the main analysis, leaving 1,219 polls. The number of polls remaining after each selection step is shown in @tbl-sample-selection. As these totals do not necessarily indicate errors, both polls were included in a sensitivity analysis to assess whether their exclusion affected the results.
 
@@ -137,7 +147,7 @@ $$
   \times 100
 $$
 
-Votes received by the same candidate under different party labels were combined before calculating the actual margin. Absolute polling error was then defined as:
+Absolute polling error was then defined as:
 
 $$
 \text{Absolute error}
@@ -146,59 +156,64 @@ $$
 
 A lower absolute error indicates greater polling accuracy. All margins and errors were expressed in percentage points.
 
-The main explanatory variables were reported undecided voter share and survey mode. Undecided voter share was measured as a percentage. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations. Survey mode and election year were treated as categorical variables.
+The main explanatory variables were reported undecided voter share and survey mode. Undecided voter share was measured as a percentage. Days before Election Day was calculated from each poll's end date, while election year distinguished the 2012 and 2016 observations.
 
 ## Statistical methods
 
-In this report multiple linear regression was used to examine how polling error was associated with survey mode and the reported percentage of undecided voters, while accounting for the number of days before the election. It was also examined whether these associations differed between the 2012 and 2016 elections.
+Multiple linear regression was used to examine associations with polling error and whether these differed by year.
 
-The response variable was the square root of absolute polling error. This transformation was chosen after comparing diagnostic plots for models using the original error, $\log(1 + \text{absolute error})$, and the square root of the error. The explanatory variables were election year, survey mode, undecided voter percentage and days before the election. Election year and survey mode were treated as categorical variables, with 2012 and Live Phone as the reference groups.
+The response variable was the square root of absolute polling error. This transformation was chosen after comparing diagnostic plots for models using the original error, $\log(1 + \text{absolute error})$, and the square root of the error. Each poll was given equal weight in the regression. Election year and survey mode were treated as categorical variables, with 2012 and Live Phone as the reference groups.
 
 An additive model and an interaction model were fitted using the square-root-transformed response. The additive model assumed that the associations between the explanatory variables and polling error were the same in both years. The interaction model allowed the associations of survey mode, undecided voter percentage and days before the election with polling error to differ by year. The two nested models were compared using an F-test. The model comparison is provided in @tbl-app-model-comparison. The final model was selected by considering the research question, model comparison and diagnostic plots.
 
-Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. The diagnostic plots for the final model are shown in @fig-diagnostics. Code for the models using the original, log-transformed and square-root responses is available in `model_analysis.R` in the project repository.
+Residuals against fitted values and a Scale–Location plot were examined to assess the model form and the spread of residuals. A normal Q–Q plot was used to assess residual normality, and Cook’s distance was used to identify potentially influential observations. Generalised variance inflation factors were also examined to assess possible multicollinearity among predictor terms. The diagnostic plots for the final model are shown in @fig-diagnostics.
+
+The square-root transformation was selected because the Q–Q plot was closer to a straight line than for the models using the original and log-transformed responses, while the spread of residuals was reasonably consistent. 
 
 A sensitivity analysis was conducted by refitting the final model after adding back the two polls with unusual reported response totals. The estimated coefficients were compared with and without these polls. The coefficient comparison is provided in @tbl-app-sensitivity. Because polls from the same state or pollster may not be independent, the usual confidence intervals and p-values are interpreted with caution.
 
 # Results {#sec-results}
 
-<!-- See rubric: Results - describe analysis w.r.t. the question; visualise; check assumptions. -->
+Using linear regression, the associations of year, percentage of undecided voters, number of days to the election and mode of polling with the square root of absolute polling error are described by the following model:
 
-Using linear regression, the associations of year, percentage of undecided voters, number of days to the election and mode of polling with the square root of the absolute error between polling results and election results are described by the following fitted model:
+$$
+\begin{aligned}
+\widehat{E}[\sqrt{\text{Error}_i}\mid X_i] ={}&
+\hat\beta_0 + \hat\beta_1 Y_i + \hat\beta_2 U_i + \hat\beta_3 D_i \\
+&+ \hat\beta_4 I_i + \hat\beta_5 V_i
++ \hat\beta_6(Y_i U_i) + \hat\beta_7(Y_i D_i) \\
+&+ \hat\beta_8(Y_i I_i) + \hat\beta_9(Y_i V_i).
+\end{aligned}
+$$
 
-sqrt(absolute_error)=1.571+0.529×1\[year=2016\]+0.0273×\[Undecided\]+0.001×\[days_to_election\]-0.198×1\[mode=Internet\]-0.216×1\[mode=IVR/Online\]-0.0233×1\[year=2016\]×\[Undecided\]+0.001×1\[year=2016\]×\[days_to_election\]+0.376×1\[year=2016\]×1\[mode=Internet\]+0.0753×1\[year=2016\]×1\[mode=IVR/Online\]
+Here, $Y_i$ indicates 2016, $U_i$ is the reported undecided voter percentage, $D_i$ is days before the election, and $I_i$ and $V_i$ indicate Internet and IVR/Online polls, respectively. The estimated coefficients and their 95% confidence intervals are reported in @tbl-model-detail.
 
 The coefficient for `year2016` was statistically significant under the usual model assumptions (p = 0.0000966). Because the model includes interactions, this coefficient represents the difference between years for Live Phone polls when undecided voter share and days before the election are both zero. It should therefore not be interpreted as an overall difference between the two election years.
 
-The `year2016:modeInternet` coefficient was also statistically significant under the usual model assumptions (p ≈ 0.00259). This suggests that the difference between Internet and Live Phone polls changed between 2012 and 2016. In 2012, the estimated Internet coefficient relative to Live Phone was −0.198, while in 2016 the combined coefficient was approximately 0.178. These coefficients are on the square-root scale.
+The `year2016:modeInternet` coefficient was also statistically significant under the usual model assumptions ($p \approx 0.00259$). This suggests that the difference between Internet and Live Phone polls changed between 2012 and 2016. In 2012, the estimated Internet coefficient relative to Live Phone was −0.198, while in 2016 the combined coefficient was approximately 0.178. These coefficients are on the square-root scale.
 
-For undecided voter share, the estimated coefficient was 0.0273 in 2012 and approximately 0.0040 in 2016. The interaction between undecided voter share and year was not statistically significant (p ≈ 0.193), so there was not enough evidence to conclude that the association differed between the two years.
+For undecided voter share, the estimated coefficient was 0.0273 in 2012 and approximately 0.0040 in 2016. The interaction between undecided voter share and year was not statistically significant ($p \approx 0.193$), so there was not enough evidence to conclude that the association differed between the two years.
 
-```{r}
-#| label: conf-interval
-#| tbl-cap: "Confidence intervals of model coefficients."
-#confidence intervals for model coefficients 
-confint(model_sqrt, level = 0.95)
-```
+@fig-mode-predictions shows the predicted mean of the square-root-transformed error for each mode and year, holding undecided voter share at 5% and days before the election at 26. The usual 95% confidence intervals should be interpreted cautiously because polls may not be independent.
 
-```{r}
-#| label: anova
-#| tbl-cap: "Analysis of variance between additive and interaction models"
-anova(model_sqrt_additive, model_sqrt)
-```
-Comparison between the additive and interaction models using an analysis of variance table shows that the F-test statistic is 3.068 with a p-value of 0.0158. This provides some support for including the year interaction terms as a group. The interaction model was selected after also considering the research question and diagnostic plots. As polls may not be independent, the F-test and individual p-values should be interpreted with caution.
+![Predicted mean of the square root of absolute polling error by survey mode and year, with usual 95% confidence intervals, at 5% undecided voters and 26 days before Election Day. The estimated difference between Internet and Live Phone changes direction between years.](survey_mode_predictions.png){#fig-mode-predictions}
+
+
+The model comparison in @tbl-app-model-comparison provided some support for including the year interactions as a group (F = 3.068, p = 0.0158). As polls may not be independent, the F-test and individual p-values should be interpreted with caution. The final model explained approximately 11.8% of the variation in the square-root-transformed absolute polling error.
 
 ## Checking assumptions
 ```{r}
-#| label: model_sqrt
-#| tbl-cap: "Residual plots of square root model"
-#plot of model
+#| label: fig-diagnostics
+#| fig-cap: "Residuals versus fitted values, normal Q-Q, Scale-Location and residuals versus leverage for the final square-root model. The Q-Q plot departs from the line at the tails, and the Scale-Location plot suggests a slight increase in residual spread."
+#| fig-width: 7
+#| fig-height: 7
+#| echo: false
 par(mfrow = c(2, 2))
 plot(model_sqrt)
 par(mfrow = c(1, 1))
 ```
 
-**Linearity:** The Residuals vs Fitted plot of the model shows that points are distributed around the horizontal line at zero. Whilst some points are clustered in vertical stripes, the plot does not show a strong curved pattern, so there is no clear evidence of a major departure from the assumed model form.
+**Linearity:** Residuals were distributed around zero, with no strong curved pattern in the Residuals vs Fitted plot. There was no clear evidence of a major departure from the assumed model form.
 
 **Normality:** The points in the normal Q–Q plot show that the residuals lie mostly close to the straight line in the middle, with departures at either end. Therefore, the residuals are not perfectly normally distributed.
 
@@ -206,61 +221,33 @@ par(mfrow = c(1, 1))
 
 **Independence:** Independence of observations is difficult to determine. Polls from the same pollster or state may be related, which may affect the assumption of independence. The unequal number of polls in 2012 (402) and 2016 (817) is also relevant when comparing the two elections. Possible dependence between polls may affect standard errors, confidence intervals and p-values.
 
-```{r}
-#| label: vir-model_sqrt
-#| tbl-cap: "Summary of variance inflation factors of predictor variables."
-library(car)
-car::vif(model_sqrt, type = 'predictor')
-```
+Using variance inflation factors and looking at $GVIF^{1/(2 \times Df)}$ shows that the reported values fall below $\sqrt{5}$. The adjusted GVIF takes account of differing degrees of freedom. The highest reported adjusted value is for `days_to_election` at 1.380; the full results are provided in @tbl-app-vif. These values do not indicate a strong multicollinearity concern under this reference threshold, although they do not prove that multicollinearity is absent.
 
-Using variance inflation factors and looking at $GVIF^{1/(2 \times Df)}$ shows that the reported values fall below $\sqrt{5}$. The adjusted GVIF takes account of differing degrees of freedom. The highest reported adjusted value is for `days_to_election` at 1.380. These values do not indicate a strong multicollinearity concern under this reference threshold, although they do not prove that multicollinearity is absent.
-
-```{r}
-#| label: cooks-distance
-#| tbl-cap: "Five largest cook's distance values."
-head(sort(cooks.distance(model_sqrt), decreasing = TRUE), 5)
-
-# Inspect the five largest Cook's distances for the square-root model
-analysis[c(96, 7, 299, 219, 237),
-         c("state", "year", "pollster", "mode", "absolute_error")]
-```
-
-**Cook’s distance:** The five largest Cook’s distance values are below 0.5. These observations remain in the data as there is no clear reason to remove them. All observations are from 2012 but from a variety of states, pollsters and polling modes.
+**Cook’s distance:** The largest Cook’s distance was approximately 0.014, as shown in @tbl-app-cooks. The five observations with the largest values were inspected and retained because there was no clear reason to remove them. All five were from 2012, across different states, pollsters and polling modes.
 
 ### Sensitivity analysis
 
-```{r}
-#| label: tbl-results-sensitivity
-#| tbl-cap: "Coefficient estimates with and without the two unusual polls."
-
-# Read the comparison generated by the data preparation script
-sensitivity_comparison <- read_csv(
-  "project datasets/sensitivity_comparison.csv",
-  show_col_types = FALSE
-)
-knitr::kable(sensitivity_comparison, digits = 5)
-```
-
-Comparing the coefficients of the model without the unusual polls and those of the model with the unusual polls, the greatest changes are for `year2016:modeIVR/Online` (an increase of 0.0169), `year2016` (an increase of 0.00509), `year2016:modeInternet` (a decrease of 0.00182), `year2016:Undecided` (a decrease of 0.000640), and `year2016:days_to_election` (a decrease of 0.0000202). Four of these are coefficients for interaction terms. The remaining coefficients changed by much smaller amounts. These comparisons are on the square-root scale.
+Including the two unusual polls led to small changes in the estimated coefficients on the square-root scale. The largest change was an increase of 0.0169 for `year2016:modeIVR/Online`; all coefficient estimates retained the same sign. The full comparison is shown in @tbl-app-sensitivity.
 
 # Discussion
 
-This investigation aimed to find whether polling error had any association with undecided voter share or polling method in the 2012 and/or 2016 US presidential elections, while also taking into account the days until the election. The overall conlcusion was that neither of these polling factors held a strong association with absolute polling error in the chosen fitted model. As indicated by the results, none of the predictors used appeared to have a statistically significant impact on polling error. This would suggest that neither undecided voter share nor polling method alone can explain differences in polling accuracy using the observation selected for this analysis.
+The results suggest that the association between survey mode and polling error differed between the two elections, particularly for Internet polls compared with Live Phone polls. However, there was not enough evidence to conclude that the association between undecided voter share and polling error differed between the two years.
 
-In the model for the 2012 polls, the association between polling error and undecided voters was slightly positive however, in 2016, the interaction coefficient shows that the positive relationship is smaller. This indicates that there may be a difference in the association between undecided voters and polling error over different election periods. Nonetheless, the coefficients were still small, and the results did not find statistically significant evidence that the difference between years is meaningful. Hence, undecided voter share alone cannot be treated as a reliable predictor in this analysis.
+The estimated association between undecided voter share and polling error was smaller in 2016 than in 2012, but there was not enough evidence that it differed between years. This does not mean that undecided voters are unimportant.
 
-Survey mode also differed slightly in its association with polling error between electoral periods. In 2012, IVR/Online and Internet polls had negative coefficients in relation to Live Phone polls. Yet in 2016, the interaction terms indicate that there was a change in the differences. The estimated Internet association with Live Phone changed to being positive, whereas the relationship between IVR/Online and Live Phone remained negative, indicating variance in the accuracy of polling methods between elections. However, it cannot be concluded that there is a statistically significant difference as the coefficients are measured on the sqaure root scale. Therefore, it cannot be determined for certain wherther there is a polling method that consistantly produced more accurate results.
+Previous research by Bon and colleagues found that undecided voters were important when examining polling bias, particularly in the 2016 election [@bon_ballard_baffour_2018]. Their study focused on polling bias and the allocation of undecided voters, while this investigation examined the size of absolute polling error. The studies also used different models and selection periods, so the results are not directly comparable.
+
+Survey mode also differed in its association with polling error between election periods. In 2012, IVR/Online and Internet polls had negative coefficients in relation to Live Phone polls. In 2016, the combined coefficient for Internet relative to Live Phone was positive, whereas the coefficient for IVR/Online relative to Live Phone remained negative. The Internet-by-year interaction provided evidence that the difference between Internet and Live Phone polls changed between the two elections under the usual model assumptions. However, the results do not establish that a particular survey mode consistently causes polls to be more accurate.
+
+The sensitivity analysis showed that the coefficient estimates changed after the two unusual polls were added back, although the estimated directions remained the same. The sensitivity analysis compared estimates, rather than confidence intervals or p-values.
 
 ## Limitations
 
-The analysis performed identifies associations between predictors and response variables; this does not mean there is necessarily a causal relationship in the data. Other factors may also impact polling error. Polls with missing undecided voter shares were excluded, which may cause selection bias if such polls differ systematically from those that were included in the final dataset. In this investigation, only three survey modes were included; therefore, the associations found cannot be generalised to other survey modes. Polls from the same state and polling organisation could be related, which can affect the reliability of standard errors and confidence intervals, as the observations may not be independent. Finally, only two election periods were covered in this analysis, meaning that the findings may not be applicable to all elections, particularly historical elections that would not have used the same polling methods. It was also chosen to only analyse polls within a 90-day period of the election; it should be considered that associations may differ for polls outside of this period. The linear models created for this investigation are not highly accurate; other modelling methods could perform better. However, the focus of this investigation is linear modelling.
+The analysis performed identifies associations between predictors and response variables; this does not mean there is necessarily a causal relationship in the data. Other factors may also be associated with polling error. Polls with missing undecided voter shares were excluded, which may cause selection bias if such polls differ systematically from those that were included in the final dataset. In this investigation, only three survey modes were included; therefore, the associations found cannot be generalised to other survey modes. Polls from the same state and polling organisation could be related, which can affect the reliability of standard errors, confidence intervals and p-values, as the observations may not be independent. The diagnostic plots also showed departures from normality at the tails and a slight increase in residual spread, so the model assumptions were not fully satisfied. Finally, only two election periods were covered in this analysis, meaning that the findings may not be applicable to all elections, particularly historical elections that would not have used the same polling methods. It was also chosen to only analyse polls within a 90-day period of the election; it should be considered that associations may differ for polls outside of this period. The final model explained a relatively small proportion of the variation in the square-root-transformed polling error, so the included variables alone do not explain most of the variation in the selected polls.
 
 # References {.unnumbered}
 
 ::: {#refs}
-```         
-report-references.bib
-```
 :::
 
 ```{=latex}
@@ -271,13 +258,18 @@ report-references.bib
 
 This appendix documents the data preparation, model comparison, diagnostics and sensitivity analysis. The analysis uses the cleaned polling data from the EDA and the election results in the project repository.
 
+The full code for data preparation and sensitivity analysis is available in
+[data_preparation.R](https://github.com/statprac/Final-Report/blob/main/project%20datasets/data_preparation.R).
+The modelling and diagnostic code is available in
+[model_analysis.R](https://github.com/statprac/Final-Report/blob/main/model_analysis.R).
+
 ## Data preparation and sample selection {#sec-app-data}
 
-The following code constructs the poll and election margins, identifies unusual reported totals and applies the sample selection rules. Missing response categories are ignored when calculating the reported total. The two unusual polls are excluded from `main_data` and retained in `sensitivity_data`.
+The data preparation code constructs the poll and election margins, identifies unusual reported totals and applies the sample selection rules. Missing response categories are ignored when calculating the reported total. The two unusual polls are excluded from `main_data` and retained in `sensitivity_data`.
 
 ```{r}
 #| label: app-data-preparation
-#| echo: true
+#| echo: false
 #| results: hide
 # Data preparation and sensitivity check
 
@@ -423,7 +415,7 @@ print(table(main_data$year, main_data$mode))
 ```{r}
 #| label: tbl-sample-selection
 #| tbl-cap: "Polls remaining after each selection step. The main analysis included 1,219 polls."
-#| echo: true
+#| echo: false
 knitr::kable(sample_counts)
 ```
 
@@ -433,7 +425,7 @@ The additive and interaction models were fitted on the square-root scale. Their 
 
 ```{r}
 #| label: app-fit-models
-#| echo: true
+#| echo: false
 # Fit the additive and interaction models to the same sample
 model_sqrt_additive <- lm(
   sqrt(absolute_error) ~ Undecided + days_to_election + mode + year,
@@ -448,46 +440,64 @@ model_sqrt <- lm(
 ```{r}
 #| label: tbl-app-model-comparison
 #| tbl-cap: "Comparison of additive and interaction models on the square-root scale. The F-test compares the year interactions as a group."
-#| echo: true
-knitr::kable(anova(model_sqrt_additive, model_sqrt), digits = 3)
+#| echo: false
+model_comparison <- anova(model_sqrt_additive, model_sqrt)
+rownames(model_comparison) <- c("Additive model", "Interaction model")
+knitr::kable(model_comparison, digits = 3, row.names = TRUE)
 ```
 
 ```{r}
 #| label: tbl-model-detail
-#| tbl-cap: "Final model coefficients and 95% confidence intervals on the square-root scale. The reference groups are 2012 and Live Phone."
-#| echo: true
-model_results <- cbind(Estimate = coef(model_sqrt), confint(model_sqrt))
+#| tbl-cap: "Final model coefficients, 95% confidence intervals and p-values on the square-root scale. The reference groups are 2012 and Live Phone."
+#| echo: false
+model_results <- data.frame(
+  Estimate = coef(model_sqrt),
+  confint(model_sqrt),
+  p_value = format.pval(
+    coef(summary(model_sqrt))[, "Pr(>|t|)"],
+    digits = 3,
+    eps = 0.001
+  ),
+  check.names = FALSE
+)
 knitr::kable(model_results, digits = 3)
 ```
 
 ## Diagnostic checks {#sec-app-checks}
 
-The following plots examine residual patterns, normality, residual spread and influential observations.
+The final-model diagnostic plots in @fig-diagnostics examine residual patterns, normality, residual spread and influential observations.
 
 ```{r}
-#| label: fig-diagnostics
-#| fig-cap: "Diagnostic plots for the final square-root model. The Q-Q plot departs from the line at the tails, and the Scale-Location plot suggests a slight increase in residual spread."
-#| fig-width: 7
-#| fig-height: 7
-#| echo: true
-par(mfrow = c(2, 2))
-plot(model_sqrt)
-par(mfrow = c(1, 1))
+#| label: tbl-app-vif
+#| tbl-cap: "Generalised variance inflation factors for predictors and their interaction terms."
+#| echo: false
+
+# Check predictor groups with their interaction terms
+vif_results <- car::vif(model_sqrt, type = "predictor")
+knitr::kable(
+  vif_results[, c("GVIF", "Df", "GVIF^(1/(2*Df))")],
+  digits = 3
+)
 ```
 
 ```{r}
 #| label: tbl-app-cooks
 #| tbl-cap: "Five polls with the largest Cook's distances in the final model. The largest Cook's distance was approximately 0.014."
-#| echo: true
+#| echo: false
 # Inspect the polls with the largest Cook's distances
 cook_values <- cooks.distance(model_sqrt)
 top_polls <- head(order(cook_values, decreasing = TRUE), 5)
 main_data |>
   slice(top_polls) |>
-  select(poll_key, year, state, pollster, mode, absolute_error) |>
+  select(year, state, pollster, mode, absolute_error) |>
   mutate(Cooks_distance = cook_values[top_polls]) |>
-  knitr::kable(digits = 3)
+  knitr::kable(
+    digits = 3,
+    col.names = c("Year", "State", "Pollster", "Mode", "Error", "Cook's D")
+  )
 ```
+
+\newpage
 
 ## Sensitivity analysis {#sec-app-sensitivity}
 
@@ -496,7 +506,7 @@ The same final model was refitted after adding the two unusual polls. Estimates 
 ```{r}
 #| label: tbl-app-sensitivity
 #| tbl-cap: "Sensitivity analysis on the square-root scale. Change is the estimate including the two unusual polls minus the main-sample estimate."
-#| echo: true
+#| echo: false
 model_with_unusual <- lm(
   sqrt(absolute_error) ~ year * (Undecided + days_to_election + mode),
   data = sensitivity_data
@@ -509,7 +519,7 @@ sensitivity_comparison <- tibble(
   With_unusual = unname(coef(model_with_unusual))
 ) |>
   mutate(Change = With_unusual - Main_sample)
-knitr::kable(sensitivity_comparison, digits = 3)
+knitr::kable(sensitivity_comparison, digits = 5)
 ```
 
 The ordinary confidence intervals and F-test assume independent observations. Polls from the same state or pollster may be related, so these results should be interpreted with caution.
