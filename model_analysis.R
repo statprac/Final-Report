@@ -75,6 +75,22 @@ model_sqrt <- lm(
   data = analysis
 )
 
+# Estimate the undecided voter association and confidence interval in each year
+analysis_2016 <- analysis |>
+  mutate(year = relevel(year, ref = "2016"))
+model_sqrt_2016 <- update(model_sqrt, data = analysis_2016)
+
+interval_2012 <- confint(model_sqrt)["Undecided", ]
+interval_2016 <- confint(model_sqrt_2016)["Undecided", ]
+undecided_intervals <- tibble(
+  Year = c(2012, 2016),
+  Estimate = c(coef(model_sqrt)["Undecided"],
+               coef(model_sqrt_2016)["Undecided"]),
+  Lower = c(interval_2012[1], interval_2016[1]),
+  Upper = c(interval_2012[2], interval_2016[2])
+)
+print(undecided_intervals)
+
 # Check diagnostics
 par(mfrow = c(2, 2))
 plot(model_sqrt)

@@ -204,9 +204,9 @@ The coefficient for `year2016` was statistically significant under the usual mod
 
 The `year2016:modeInternet` coefficient was also statistically significant under the usual model assumptions ($p \approx 0.00259$). This suggests that the difference between Internet and Live Phone polls changed between 2012 and 2016. In 2012, the estimated Internet coefficient relative to Live Phone was −0.198, while in 2016 the combined coefficient was approximately 0.178. These coefficients are on the square-root scale.
 
-For undecided voter share, the estimated coefficient was 0.0273 in 2012 and approximately 0.0040 in 2016. The interaction between undecided voter share and year was not statistically significant ($p \approx 0.193$), so there was not enough evidence to conclude that the association differed between the two years.
+For undecided voter share, the estimated association with the square root of polling error was 0.0273 in 2012 (95% CI: −0.005 to 0.060) and 0.0040 in 2016 (95% CI: −0.009 to 0.017). Both intervals included zero. The interaction between undecided voter share and year was not statistically significant ($p \approx 0.193$), so there was not enough evidence to conclude that the association differed between the two years. These usual confidence intervals, shown in @tbl-app-undecided, should be interpreted with caution because polls may not be independent.
 
-@fig-mode-predictions shows the predicted mean of the square-root-transformed error for each mode and year, holding undecided voter share at 5% and days before the election at 26. The usual 95% confidence intervals should be interpreted cautiously because polls may not be independent.
+@fig-mode-predictions shows the predicted mean of the square-root-transformed error for each mode and year. At 5% undecided voters and 26 days before the election, the predicted mean square-root error for Internet polls was lower than for Live Phone polls in 2012, but higher in 2016. These estimates describe the selected polls and do not establish that survey mode caused the differences. The usual 95% confidence intervals should be interpreted cautiously because polls may not be independent.
 
 ![Predicted mean of the square root of absolute polling error by survey mode and year, with usual 95% confidence intervals, at 5% undecided voters and 26 days before Election Day. The estimated difference between Internet and Live Phone changes direction between years.](survey_mode_predictions.png){#fig-mode-predictions}
 
@@ -233,7 +233,7 @@ par(mfrow = c(1, 1))
 
 **Independence:** Independence of observations is difficult to determine. Polls from the same pollster or state may be related, which may affect the assumption of independence. The unequal number of polls in 2012 (402) and 2016 (817) is also relevant when comparing the two elections. Possible dependence between polls may affect standard errors, confidence intervals and p-values.
 
-Using variance inflation factors and looking at $GVIF^{1/(2 \times Df)}$ shows that the reported values fall below $\sqrt{5}$. The adjusted GVIF takes account of differing degrees of freedom. The highest reported adjusted value is for `days_to_election` at 1.380; the full results are provided in @tbl-app-vif. These values do not indicate a strong multicollinearity concern under this reference threshold, although they do not prove that multicollinearity is absent.
+Using variance inflation factors and looking at $GVIF^{1/(2 \times Df)}$ shows that the reported values fall below $\sqrt{5}$. The adjusted GVIF takes account of differing degrees of freedom. The highest reported adjusted value is for `days_to_election` at 1.380; the full results are provided in @tbl-app-vif. Because year interacts with all other predictors, its predictor-level GVIF is necessarily 1 and is not informative on its own about collinearity involving year. The other reported values do not indicate a strong multicollinearity concern under this reference threshold, although they do not prove that multicollinearity is absent.
 
 **Cook’s distance:** The largest Cook’s distance was approximately 0.014, as shown in @tbl-app-cooks. The five observations with the largest values were inspected and retained because there was no clear reason to remove them. All five were from 2012, across different states, pollsters and polling modes.
 
@@ -247,7 +247,7 @@ The results suggest that the association between survey mode and polling error d
 
 The estimated association between undecided voter share and polling error was smaller in 2016 than in 2012, but there was not enough evidence that it differed between years. This does not mean that undecided voters are unimportant.
 
-Previous research by Bon and colleagues found that undecided voters were important when examining polling bias, particularly in the 2016 election [@bon_ballard_baffour_2018]. Their study focused on polling bias and the allocation of undecided voters, while this investigation examined the size of absolute polling error. The studies also used different models and selection periods, so the results are not directly comparable.
+Previous research by Bon and colleagues found that undecided voters were important when examining polling bias, particularly in the 2016 election [@bon_ballard_baffour_2018]. Their study focused on polling bias and the allocation of undecided voters, while this investigation examined the size of absolute polling error. The studies also used different models and selection periods, so the results are not directly comparable. Absolute error does not indicate which candidate was favoured by a poll. Polls with errors in opposite directions can therefore have similar absolute errors, whereas Bon and colleagues examined directional polling bias.
 
 Survey mode also differed in its association with polling error between election periods. In 2012, IVR/Online and Internet polls had negative coefficients in relation to Live Phone polls. In 2016, the combined coefficient for Internet relative to Live Phone was positive, whereas the coefficient for IVR/Online relative to Live Phone remained negative. The Internet-by-year interaction provided evidence that the difference between Internet and Live Phone polls changed between the two elections under the usual model assumptions. However, the results do not establish that a particular survey mode consistently causes polls to be more accurate.
 
@@ -473,6 +473,27 @@ model_results <- data.frame(
   check.names = FALSE
 )
 knitr::kable(model_results, digits = 3)
+```
+
+```{r}
+#| label: tbl-app-undecided
+#| tbl-cap: "Estimated associations of undecided voter share with square-root polling error by year, with usual 95% confidence intervals."
+#| echo: false
+# Refit with 2016 as the reference year to obtain its association
+analysis_2016 <- main_data |>
+  mutate(year = relevel(year, ref = "2016"))
+model_sqrt_2016 <- update(model_sqrt, data = analysis_2016)
+
+interval_2012 <- confint(model_sqrt)["Undecided", ]
+interval_2016 <- confint(model_sqrt_2016)["Undecided", ]
+undecided_intervals <- tibble(
+  Year = c(2012, 2016),
+  Estimate = c(coef(model_sqrt)["Undecided"],
+               coef(model_sqrt_2016)["Undecided"]),
+  Lower = c(interval_2012[1], interval_2016[1]),
+  Upper = c(interval_2012[2], interval_2016[2])
+)
+knitr::kable(undecided_intervals, digits = 4)
 ```
 
 ## Diagnostic checks {#sec-app-checks}
