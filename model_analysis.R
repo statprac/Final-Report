@@ -115,10 +115,6 @@ par(mfrow = c(1, 1))
 
 anova(model_sqrt_additive, model_sqrt)
 
-#| echo: false
-
-library(tidyverse)
-
 # Predict the model outcome for each survey mode and year
 plot_data <- expand_grid(
   year = levels(analysis$year),
