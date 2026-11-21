@@ -2,7 +2,7 @@
 
 ### Project Overview
 
-This project analyses the accuracy of 2012 and 2016 election state-level polls and if undecided voter share or polling mode affects this. The relationship between the two election periods is also investigated. These relationships will be uncovered using exploratory data analysis along with linear modelling.
+This project analyses the accuracy of 2012 and 2016 election state-level polls and whether undecided voter share and polling mode are associated with polling accuracy. The relationship between the two election periods is also investigated. These relationships will be uncovered using exploratory data analysis along with linear modelling.
 
 ### Research Question
 
@@ -17,10 +17,12 @@ This project uses 3 main datasets:
 
 ### Repository Structure
 
-- project datasets/: Stores raw data and cleaned data (cleaned in EDA report) along with analysis datasets created in this investigation.
-- report-references.bib: Contains the bibliography of references used in the report.
-- Final_Report: Quarto document used to write and produce the completed report.
-- README.md: An overview of the project repository along with instructions for reproducing the analysis done in the report.
+- `project datasets/`: Stores raw data and cleaned data (cleaned in EDA report) along with analysis datasets created in this investigation.
+- `report-references.bib`: Contains the bibliography of references used in the report.
+- `Final_Report.qmd`: Quarto document used to write and produce the completed report.
+- `README.md`: An overview of the project repository along with instructions for reproducing the analysis done in the report.
+- `project datasets/data_preparation.R`: Prepares the analysis datasets and performs the sensitivity check.
+- `model_analysis.R`: Fits and compares the models, checks diagnostics, and creates the prediction plot.
 
 ### Data Preparation
 
@@ -40,12 +42,11 @@ The combined polling datasets and the election results dataset were cleaned and 
 
 To reproduce the analysis done in this investigation:
 
-1. Clone the project repository and open it in RStudio.
-2. Download R and any R packages if not previously installed.
-3. Ensure that all datasets are present and in the correct folders.
-4. Open the Final_Report.qmd file.
-5. Run all of the code to check that everything runs correctly.
-6. Render the Final_Report.qmd to produce a PDF of the report.
+1. Clone the repository and open `Final-Report.Rproj` in RStudio.
+2. Install R and the required packages listed below.
+3. If needed, run `project datasets/data_preparation.R` to recreate the analysis datasets and sensitivity comparison.
+4. If needed, run `model_analysis.R` to reproduce the models, diagnostics, and prediction plot.
+5. Open `Final_Report.qmd` and render it to PDF using Quarto.
 
 ### Packages Used
 
