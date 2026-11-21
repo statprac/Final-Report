@@ -58,6 +58,8 @@ The analysis and investigation were completed in R, and the main report was prod
 - tidyr - for reshaping and organising data
 - ggplot2 - for visualising data
 - modelsummary - for displaying model results
+- car - for checking generalised variance inflation factors
+- knitr - for formatting tables in the report
 
 ### Authors
 
